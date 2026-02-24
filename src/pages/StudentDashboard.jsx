@@ -32,16 +32,6 @@ import MySubmissions from "../components/student/MySubmissions";
 import AggregatedResults from "../components/student/AggregatedResults";
 
 const drawerWidth = 220;
-const demoFormKeys = new Set([
-  "Math 101::Dr. Sharma",
-  "Physics 201::Prof. Kumar",
-  "CS 220::Ms. Iyer",
-  "English 102::Dr. Patel",
-  "Chemistry 110::Dr. Rao",
-  "Economics 205::Prof. Singh",
-  "Data Structures::Ms. Nair",
-  "Operating Systems::Dr. Fernandes",
-]);
 
 const StudentDashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -54,18 +44,7 @@ const StudentDashboard = () => {
   
   const [forms] = useState(() => {
     const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
-
-    const cleanedForms = storedForms.filter((form) => {
-      const key = `${form.course}::${form.instructor}`;
-      if (form.facultyEmail) return true;
-      return !demoFormKeys.has(key);
-    });
-
-    if (cleanedForms.length !== storedForms.length) {
-      localStorage.setItem("forms", JSON.stringify(cleanedForms));
-    }
-
-    return cleanedForms;
+    return storedForms.filter((form) => form.facultyEmail);
   });
   const [responses, setResponses] = useState(
     () => JSON.parse(localStorage.getItem("responses")) || []
