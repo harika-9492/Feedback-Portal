@@ -11,35 +11,14 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Grid,
-  Card,
-  CardContent,
-  TextField,
-  Select,
-  MenuItem,
-  Paper,
-  Chip,
-  Divider,
-  Alert,
-  Stack,
 } from "@mui/material";
 import { AuthContext } from "../context/AuthContextValue";
 import DashboardInsights from "../components/faculty/DashboardInsights";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  CartesianGrid,
-} from "recharts";
+import CreateForm from "../components/faculty/CreateForm";
+import YourForms from "../components/faculty/YourForms";
+import ResponseViewer from "../components/faculty/ResponseViewer";
 
 const drawerWidth = 240;
-const chartColors = ["#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444"];
 
 const templates = [
   {
@@ -401,337 +380,6 @@ const FacultyDashboard = () => {
     />
   );
 
-  const renderCreateForm = () => {
-    return (
-      <>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Create Form
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          Choose a template, customize it, add your own options, and send to students.
-        </Typography>
-
-        {message.text && selectedSection === "create-form" && (
-          <Alert severity={message.type} sx={{ mb: 3 }}>
-            {message.text}
-          </Alert>
-        )}
-
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
-            <Paper sx={{ p: 3, borderRadius: 3 }}>
-              <TextField
-                fullWidth
-                label="Course Name"
-                margin="normal"
-                value={newForm.course}
-                onChange={(e) =>
-                  setNewForm((prev) => ({ ...prev, course: e.target.value }))
-                }
-              />
-
-              <TextField
-                fullWidth
-                label="Instructor"
-                margin="normal"
-                value={newForm.instructor}
-                onChange={(e) =>
-                  setNewForm((prev) => ({ ...prev, instructor: e.target.value }))
-                }
-              />
-
-              <TextField
-                fullWidth
-                label="Short Description"
-                margin="normal"
-                value={newForm.description}
-                onChange={(e) =>
-                  setNewForm((prev) => ({ ...prev, description: e.target.value }))
-                }
-              />
-
-              <Select
-                fullWidth
-                value={selectedTemplate}
-                onChange={(e) => handleTemplateSelect(e.target.value)}
-                displayEmpty
-                sx={{ mt: 2 }}
-              >
-                <MenuItem value="">Select Template</MenuItem>
-                {templates.map((template) => (
-                  <MenuItem key={template.name} value={template.name}>
-                    {template.name}
-                  </MenuItem>
-                ))}
-              </Select>
-
-              <Typography variant="h6" sx={{ mt: 3 }}>
-                Questions
-              </Typography>
-
-              {newForm.questions.map((questionItem, questionIndex) => (
-                <Paper
-                  key={questionIndex}
-                  sx={{ p: 2, mt: 2, borderRadius: 2, backgroundColor: "#f8fafc" }}
-                >
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid size={{ xs: 12, md: 7 }}>
-                      <TextField
-                        fullWidth
-                        label={`Question ${questionIndex + 1}`}
-                        value={questionItem.question}
-                        onChange={(e) =>
-                          updateQuestion(questionIndex, "question", e.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                      <Select
-                        fullWidth
-                        value={questionItem.type}
-                        onChange={(e) =>
-                          updateQuestion(questionIndex, "type", e.target.value)
-                        }
-                      >
-                        <MenuItem value="text">Text</MenuItem>
-                        <MenuItem value="rating">Rating</MenuItem>
-                        <MenuItem value="single_choice">Single Choice</MenuItem>
-                      </Select>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 2 }}>
-                      <Button fullWidth color="error" onClick={() => removeQuestion(questionIndex)}>
-                        Remove
-                      </Button>
-                    </Grid>
-                  </Grid>
-
-                  {questionItem.type === "single_choice" && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Options
-                      </Typography>
-
-                      {(questionItem.options || []).map((option, optionIndex) => (
-                        <Box
-                          key={optionIndex}
-                          sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1 }}
-                        >
-                          <TextField
-                            fullWidth
-                            size="small"
-                            label={`Option ${optionIndex + 1}`}
-                            value={option}
-                            onChange={(e) =>
-                              updateOption(questionIndex, optionIndex, e.target.value)
-                            }
-                          />
-                          <Button
-                            color="error"
-                            onClick={() => removeOption(questionIndex, optionIndex)}
-                          >
-                            Remove
-                          </Button>
-                        </Box>
-                      ))}
-
-                      <Button size="small" onClick={() => addOption(questionIndex)}>
-                        Add Option
-                      </Button>
-                    </Box>
-                  )}
-                </Paper>
-              ))}
-
-              <Button sx={{ mt: 2 }} onClick={addQuestion}>
-                Add Question
-              </Button>
-
-              <Box sx={{ mt: 3, display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-                <Button variant="outlined" onClick={() => handleSaveForm({ publishNow: false })}>
-                  Save Draft
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={() => handleSaveForm({ publishNow: true })}
-                >
-                  Create & Send
-                </Button>
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-      </>
-    );
-  };
-
-  const renderYourForms = () => {
-    return (
-      <>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Your Forms
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          View all created forms and track their response status.
-        </Typography>
-
-        {forms.length === 0 ? (
-          <Typography color="text.secondary">No forms yet.</Typography>
-        ) : (
-          <Grid container spacing={3}>
-            {forms.map((form) => {
-              const formResponseCount = responses.filter(
-                (response) => response.formId === form.id
-              ).length;
-
-              return (
-                <Grid size={{ xs: 12, md: 6, lg: 4 }} key={form.id}>
-                  <Card
-                    sx={{
-                      borderRadius: 3,
-                      boxShadow: "var(--shadow-1)",
-                      height: "100%",
-                      background:
-                        "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,253,250,0.85) 100%)",
-                      border: "1px solid rgba(255, 255, 255, 0.75)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  >
-                    <CardContent>
-                      <Typography variant="h6" fontWeight={700}>
-                        {form.course}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        {form.instructor}
-                      </Typography>
-
-                      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                        <Chip
-                          size="small"
-                          label={form.published ? "Sent" : "Draft"}
-                          color={form.published ? "success" : "default"}
-                        />
-                        <Chip
-                          size="small"
-                          label={`Responses: ${formResponseCount}`}
-                          color="primary"
-                          variant="outlined"
-                        />
-                      </Box>
-
-                      <Button
-                        color="error"
-                        variant="text"
-                        sx={{ mt: 1.5, textTransform: "none", fontWeight: 600 }}
-                        onClick={() => setPendingDeleteFormId(form.id)}
-                      >
-                        Delete Form
-                      </Button>
-
-                      {pendingDeleteFormId === form.id && (
-                        <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                          <Button
-                            size="small"
-                            color="error"
-                            variant="contained"
-                            onClick={() => handleDeleteForm(form.id)}
-                          >
-                            Confirm Delete
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => setPendingDeleteFormId(null)}
-                          >
-                            Cancel
-                          </Button>
-                        </Box>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-        )}
-      </>
-    );
-  };
-
-  const renderResponses = () => {
-    return (
-      <>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Student Responses
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          Track responses per form and quickly identify low-engagement forms.
-        </Typography>
-
-        {forms.length === 0 ? (
-          <Typography color="text.secondary">No forms available.</Typography>
-        ) : (
-          <Grid container spacing={3}>
-            {forms.map((form) => {
-              const formResponses = responses.filter(
-                (response) => response.formId === form.id
-              );
-
-              const ratings = formResponses
-                .map((response) => response.answers?.rating)
-                .filter((value) => typeof value === "number" && value > 0);
-
-              const averageRating = ratings.length
-                ? (
-                    ratings.reduce((sum, value) => sum + value, 0) / ratings.length
-                  ).toFixed(1)
-                : "N/A";
-
-              return (
-                <Grid size={{ xs: 12, lg: 6 }} key={form.id}>
-                  <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
-                    <CardContent>
-                      <Typography variant="h6" fontWeight={700}>
-                        {form.course}
-                      </Typography>
-                      <Typography color="text.secondary" sx={{ mb: 1 }}>
-                        {form.instructor}
-                      </Typography>
-
-                      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
-                        <Chip label={`Responses: ${formResponses.length}`} color="primary" />
-                        <Chip label={`Avg Rating: ${averageRating}`} color="success" variant="outlined" />
-                      </Box>
-
-                      {formResponses.length === 0 ? (
-                        <Typography color="text.secondary">No responses yet.</Typography>
-                      ) : (
-                        <Stack spacing={1.25}>
-                          {formResponses.slice(-3).reverse().map((response, index) => (
-                            <Paper key={`${form.id}-${index}`} sx={{ p: 1.25, borderRadius: 2 }}>
-                              <Typography variant="caption" color="text.secondary">
-                                {response.date}
-                              </Typography>
-                              <Typography variant="body2" sx={{ mt: 0.5 }}>
-                                Rating: {response.answers?.rating || "N/A"}
-                              </Typography>
-                              <Typography variant="body2">
-                                Issues: {(response.answers?.issues || []).join(", ") || "N/A"}
-                              </Typography>
-                            </Paper>
-                          ))}
-                        </Stack>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-        )}
-      </>
-    );
-  };
-
   return (
     <Box
       sx={{
@@ -795,9 +443,39 @@ const FacultyDashboard = () => {
       <Box component="main" sx={{ flexGrow: 1, p: 4 }}>
         <Toolbar />
         {(selectedSection === "dashboard" || selectedSection === "") && renderInsights()}
-        {selectedSection === "create-form" && renderCreateForm()}
-        {selectedSection === "your-forms" && renderYourForms()}
-        {selectedSection === "responses" && renderResponses()}
+        {selectedSection === "create-form" && (
+          <CreateForm
+            selectedTemplate={selectedTemplate}
+            newForm={newForm}
+            setNewForm={setNewForm}
+            templates={templates}
+            message={message}
+            handleTemplateSelect={handleTemplateSelect}
+            addQuestion={addQuestion}
+            removeQuestion={removeQuestion}
+            updateQuestion={updateQuestion}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateOption={updateOption}
+            handleSaveForm={handleSaveForm}
+            selectedSection={selectedSection}
+          />
+        )}
+        {selectedSection === "your-forms" && (
+          <YourForms
+            forms={forms}
+            responses={responses}
+            pendingDeleteFormId={pendingDeleteFormId}
+            setPendingDeleteFormId={setPendingDeleteFormId}
+            handleDeleteForm={handleDeleteForm}
+          />
+        )}
+        {selectedSection === "responses" && (
+          <ResponseViewer
+            forms={forms}
+            responses={responses}
+          />
+        )}
       </Box>
     </Box>
   );
