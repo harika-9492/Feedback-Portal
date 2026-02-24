@@ -11,6 +11,66 @@ import {
 } from "@mui/material";
 
 const ResponseViewer = ({ forms, responses }) => {
+  const getRatingValues = (response, form) => {
+    if (!form?.questions) {
+      const legacyRating = response?.answers?.rating;
+      return typeof legacyRating === "number" && legacyRating > 0 ? [legacyRating] : [];
+    }
+
+    const values = [];
+    form.questions.forEach((question, questionIndex) => {
+      if (question.type !== "rating") return;
+      const value = response.answers?.[questionIndex];
+      if (typeof value === "number" && value > 0) {
+        values.push(value);
+      }
+    });
+
+    const legacyRating = response.answers?.rating;
+    if (values.length === 0 && typeof legacyRating === "number" && legacyRating > 0) {
+      values.push(legacyRating);
+    }
+
+    return values;
+  };
+
+  const getIssueValues = (response, form) => {
+    const values = [];
+
+    if (form?.questions) {
+      form.questions.forEach((question, questionIndex) => {
+        if (question.type === "single_choice") {
+          const value = response.answers?.[questionIndex];
+          if (typeof value === "string" && value.trim()) {
+            values.push(value.trim());
+          }
+        }
+
+        if (question.type === "multi_choice") {
+          const answerList = response.answers?.[questionIndex];
+          if (Array.isArray(answerList)) {
+            answerList.forEach((item) => {
+              if (typeof item === "string" && item.trim()) {
+                values.push(item.trim());
+              }
+            });
+          }
+        }
+      });
+    }
+
+    const legacyIssues = response.answers?.issues;
+    if (Array.isArray(legacyIssues)) {
+      legacyIssues.forEach((item) => {
+        if (typeof item === "string" && item.trim()) {
+          values.push(item.trim());
+        }
+      });
+    }
+
+    return values;
+  };
+
   return (
     <>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
@@ -29,9 +89,9 @@ const ResponseViewer = ({ forms, responses }) => {
               (response) => response.formId === form.id
             );
 
-            const ratings = formResponses
-              .map((response) => response.answers?.rating)
-              .filter((value) => typeof value === "number" && value > 0);
+            const ratings = formResponses.flatMap((response) =>
+              getRatingValues(response, form)
+            );
 
             const averageRating = ratings.length
               ? (
@@ -61,15 +121,30 @@ const ResponseViewer = ({ forms, responses }) => {
                       <Stack spacing={1.25}>
                         {formResponses.slice(-3).reverse().map((response, index) => (
                           <Paper key={`${form.id}-${index}`} sx={{ p: 1.25, borderRadius: 2 }}>
+                            {(() => {
+                              const responseRatings = getRatingValues(response, form);
+                              const responseIssues = getIssueValues(response, form);
+                              const responseRating = responseRatings.length
+                                ? (
+                                    responseRatings.reduce((sum, value) => sum + value, 0) /
+                                    responseRatings.length
+                                  ).toFixed(1)
+                                : "N/A";
+
+                              return (
+                                <>
                             <Typography variant="caption" color="text.secondary">
                               {response.date}
                             </Typography>
                             <Typography variant="body2" sx={{ mt: 0.5 }}>
-                              Rating: {response.answers?.rating || "N/A"}
+                              Rating: {responseRating}
                             </Typography>
                             <Typography variant="body2">
-                              Issues: {(response.answers?.issues || []).join(", ") || "N/A"}
+                              Issues: {responseIssues.join(", ") || "N/A"}
                             </Typography>
+                                </>
+                              );
+                            })()}
                           </Paper>
                         ))}
                       </Stack>

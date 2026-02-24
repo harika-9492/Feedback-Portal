@@ -88,6 +88,91 @@ const FacultyDashboard = () => {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [pendingDeleteFormId, setPendingDeleteFormId] = useState(null);
 
+  const formById = useMemo(() => {
+    return new Map(forms.map((form) => [form.id, form]));
+  }, [forms]);
+
+  const getRatingValues = (response, form) => {
+    if (!response || !form?.questions) {
+      const legacyRating = response?.answers?.rating;
+      return typeof legacyRating === "number" && legacyRating > 0 ? [legacyRating] : [];
+    }
+
+    const values = [];
+    form.questions.forEach((question, questionIndex) => {
+      if (question.type !== "rating") return;
+      const value = response.answers?.[questionIndex];
+      if (typeof value === "number" && value > 0) {
+        values.push(value);
+      }
+    });
+
+    const legacyRating = response.answers?.rating;
+    if (values.length === 0 && typeof legacyRating === "number" && legacyRating > 0) {
+      values.push(legacyRating);
+    }
+
+    return values;
+  };
+
+  const getSelectableAnswers = (response, form) => {
+    const values = [];
+
+    if (form?.questions) {
+      form.questions.forEach((question, questionIndex) => {
+        if (question.type === "single_choice") {
+          const answer = response.answers?.[questionIndex];
+          if (typeof answer === "string" && answer.trim()) {
+            values.push(answer.trim());
+          }
+        }
+
+        if (question.type === "multi_choice") {
+          const answerList = response.answers?.[questionIndex];
+          if (Array.isArray(answerList)) {
+            answerList.forEach((item) => {
+              if (typeof item === "string" && item.trim()) {
+                values.push(item.trim());
+              }
+            });
+          }
+        }
+      });
+    }
+
+    const legacyIssues = response.answers?.issues;
+    if (Array.isArray(legacyIssues)) {
+      legacyIssues.forEach((item) => {
+        if (typeof item === "string" && item.trim()) {
+          values.push(item.trim());
+        }
+      });
+    }
+
+    return values;
+  };
+
+  const getTextSuggestions = (response, form) => {
+    const values = [];
+
+    if (form?.questions) {
+      form.questions.forEach((question, questionIndex) => {
+        if (question.type !== "text") return;
+        const answer = response.answers?.[questionIndex];
+        if (typeof answer === "string" && answer.trim()) {
+          values.push(answer.trim());
+        }
+      });
+    }
+
+    const legacySuggestion = response.answers?.suggestion;
+    if (typeof legacySuggestion === "string" && legacySuggestion.trim()) {
+      values.push(legacySuggestion.trim());
+    }
+
+    return values;
+  };
+
   const refreshData = () => {
     const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
     const storedResponses = JSON.parse(localStorage.getItem("responses")) || [];
@@ -294,9 +379,10 @@ const FacultyDashboard = () => {
       forms.some((form) => form.id === response.formId)
     );
 
-    const ratings = allResponses
-      .map((response) => response.answers?.rating)
-      .filter((value) => typeof value === "number" && value > 0);
+    const ratings = allResponses.flatMap((response) => {
+      const form = formById.get(response.formId);
+      return getRatingValues(response, form);
+    });
 
     const averageRating = ratings.length
       ? (ratings.reduce((sum, value) => sum + value, 0) / ratings.length).toFixed(1)
@@ -314,7 +400,7 @@ const FacultyDashboard = () => {
       averageRating,
       lowResponseForms,
     };
-  }, [forms, responses]);
+  }, [forms, responses, formById]);
 
   const facultyResponses = useMemo(() => {
     return responses.filter((response) => forms.some((form) => form.id === response.formId));
@@ -342,8 +428,8 @@ const FacultyDashboard = () => {
 
   const issueData = useMemo(() => {
     const counts = facultyResponses.reduce((acc, response) => {
-      const issues = response.answers?.issues || [];
-      if (!Array.isArray(issues)) return acc;
+      const form = formById.get(response.formId);
+      const issues = getSelectableAnswers(response, form);
 
       issues.forEach((issue) => {
         if (!issue) return;
@@ -356,15 +442,17 @@ const FacultyDashboard = () => {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 6);
-  }, [facultyResponses]);
+  }, [facultyResponses, formById]);
 
   const recentSuggestions = useMemo(() => {
     return facultyResponses
-      .map((response) => response.answers?.suggestion)
-      .filter((item) => typeof item === "string" && item.trim().length > 0)
+      .flatMap((response) => {
+        const form = formById.get(response.formId);
+        return getTextSuggestions(response, form);
+      })
       .slice(-5)
       .reverse();
-  }, [facultyResponses]);
+  }, [facultyResponses, formById]);
 
   const renderInsights = () => (
     <DashboardInsights
