@@ -152,12 +152,30 @@ const DashboardHeader = () => {
 
             <Divider />
 
+            {user?.name && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "text.secondary" }}>
+                  Name
+                </Typography>
+                <Typography variant="body2">{user.name}</Typography>
+              </Box>
+            )}
+
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "text.secondary" }}>
                 Email
               </Typography>
               <Typography variant="body2">{user?.email}</Typography>
             </Box>
+
+            {user?.registerNo && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "text.secondary" }}>
+                  Register No.
+                </Typography>
+                <Typography variant="body2">{user.registerNo}</Typography>
+              </Box>
+            )}
 
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: "bold", color: "text.secondary" }}>

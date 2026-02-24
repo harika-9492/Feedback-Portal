@@ -32,8 +32,8 @@ export const AuthProvider = ({ children }) => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-const login = (role, email) => {
-  const userData = { role, email };
+const login = (role, email, name = "", registerNo = "") => {
+  const userData = { role, email, name, registerNo };
   setUser(userData);
   localStorage.setItem("user", JSON.stringify(userData));
 };

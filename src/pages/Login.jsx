@@ -36,7 +36,7 @@ const Login = () => {
     const normalizedRole =
       foundUser.role === "admin" ? "faculty" : foundUser.role;
 
-    login(normalizedRole, foundUser.email);
+    login(normalizedRole, foundUser.email, foundUser.name, foundUser.registerNo);
 
     if (normalizedRole === "faculty") {
       navigate("/faculty");
