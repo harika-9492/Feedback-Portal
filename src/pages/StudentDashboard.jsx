@@ -20,6 +20,8 @@ import {
   FormLabel,
   FormControlLabel,
   Checkbox,
+  Radio,
+  RadioGroup,
   Rating,
   Chip,
   Alert,
@@ -60,18 +62,32 @@ const StudentDashboard = () => {
     () => JSON.parse(localStorage.getItem("responses")) || []
   );
   const [currentForm, setCurrentForm] = useState(null);
-  const [answers, setAnswers] = useState({
-    rating: 0,
-    issues: [],
-    suggestion: "",
-  });
+  const [answers, setAnswers] = useState({});
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const handleSubmit = () => {
-    if (!answers.rating || answers.issues.length === 0) {
+    // Validate that all questions have been answered
+    const unansweredQuestions = currentForm.questions.filter((_, index) => {
+      const answer = answers[index];
+      
+      // Check based on question type
+      if (currentForm.questions[index].type === "rating") {
+        return !answer || answer === 0;
+      } else if (currentForm.questions[index].type === "multi_choice") {
+        return !answer || answer.length === 0;
+      } else if (currentForm.questions[index].type === "single_choice") {
+        return !answer || answer === "";
+      } else if (currentForm.questions[index].type === "text") {
+        // Text questions are optional
+        return false;
+      }
+      return false;
+    });
+
+    if (unansweredQuestions.length > 0) {
       setMessage({
         type: "error",
-        text: "Please provide a rating and select at least one issue.",
+        text: "Please answer all required questions.",
       });
       return;
     }
@@ -80,11 +96,7 @@ const StudentDashboard = () => {
       formId: currentForm.id,
       student: null,
       submittedBy: user.email,
-      answers: {
-        rating: answers.rating,
-        issues: answers.issues,
-        suggestion: answers.suggestion,
-      },
+      answers: answers,
       date: new Date().toLocaleString(),
     };
 
@@ -93,11 +105,7 @@ const StudentDashboard = () => {
     setResponses(updatedResponses);
 
     setCurrentForm(null);
-    setAnswers({
-      rating: 0,
-      issues: [],
-      suggestion: "",
-    });
+    setAnswers({});
     setMessage({ type: "success", text: "Feedback submitted successfully!" });
   };
 
@@ -113,25 +121,63 @@ const StudentDashboard = () => {
   };
 
   const getAggregates = (formId) => {
+    const form = forms.find((f) => f.id === formId);
     const formResponses = responses.filter((r) => r.formId === formId);
-    const ratingValues = formResponses
-      .map((r) => r.answers?.rating)
-      .filter((v) => typeof v === "number" && v > 0);
+    
+    if (!form || !form.questions) {
+      return { total: formResponses.length, averageRating: "N/A", issueCounts: {} };
+    }
+
+    // Find rating questions and calculate average
+    const ratingQuestionIndices = form.questions
+      .map((q, idx) => (q.type === "rating" ? idx : -1))
+      .filter((idx) => idx !== -1);
+
+    let ratingValues = [];
+    ratingQuestionIndices.forEach((qIdx) => {
+      formResponses.forEach((r) => {
+        const value = r.answers?.[qIdx];
+        if (typeof value === "number" && value > 0) {
+          ratingValues.push(value);
+        }
+      });
+    });
+
+    // Backwards compatibility - check for old rating structure
+    if (ratingValues.length === 0) {
+      ratingValues = formResponses
+        .map((r) => r.answers?.rating)
+        .filter((v) => typeof v === "number" && v > 0);
+    }
 
     const averageRating = ratingValues.length
-      ? (
-          ratingValues.reduce((sum, v) => sum + v, 0) /
-          ratingValues.length
-        ).toFixed(1)
+      ? (ratingValues.reduce((sum, v) => sum + v, 0) / ratingValues.length).toFixed(1)
       : "N/A";
 
-    const issueCounts = formResponses.reduce((acc, r) => {
-      const issues = r.answers?.issues || [];
-      issues.forEach((issue) => {
-        acc[issue] = (acc[issue] || 0) + 1;
+    // Collect multi-choice answers
+    const issueCounts = {};
+    form.questions.forEach((q, qIdx) => {
+      if (q.type === "multi_choice") {
+        formResponses.forEach((r) => {
+          const answers = r.answers?.[qIdx];
+          if (Array.isArray(answers)) {
+            answers.forEach((ans) => {
+              issueCounts[ans] = (issueCounts[ans] || 0) + 1;
+            });
+          }
+        });
+      }
+    });
+
+    // Backwards compatibility - check for old issues structure
+    if (Object.keys(issueCounts).length === 0) {
+      formResponses.forEach((r) => {
+        const issues = r.answers?.issues || [];
+        issues.forEach((issue) => {
+          issueCounts[issue] = (issueCounts[issue] || 0) + 1;
+        });
       });
-      return acc;
-    }, {});
+    }
 
     return {
       total: formResponses.length,
@@ -493,19 +539,56 @@ const StudentDashboard = () => {
 
     if (selectedSection === "results") {
       const totalResponses = responses.length;
-      const overallRatings = responses
-        .map((r) => r.answers?.rating)
-        .filter((v) => typeof v === "number" && v > 0);
+      
+      // Calculate overall ratings from all forms
+      const overallRatings = [];
+      responses.forEach((r) => {
+        // Find the form to get question types
+        const form = forms.find((f) => f.id === r.formId);
+        if (form && form.questions) {
+          form.questions.forEach((q, qIdx) => {
+            if (q.type === "rating") {
+              const value = r.answers?.[qIdx];
+              if (typeof value === "number" && value > 0) {
+                overallRatings.push(value);
+              }
+            }
+          });
+        }
+        // Backwards compatibility
+        const legacyRating = r.answers?.rating;
+        if (typeof legacyRating === "number" && legacyRating > 0) {
+          overallRatings.push(legacyRating);
+        }
+      });
+
       const overallAverage = overallRatings.length
         ? (overallRatings.reduce((sum, v) => sum + v, 0) / overallRatings.length).toFixed(1)
         : "N/A";
-      const issueCounts = responses.reduce((acc, r) => {
-        const issues = r.answers?.issues || [];
-        issues.forEach((issue) => {
-          acc[issue] = (acc[issue] || 0) + 1;
+      
+      // Count all multi-choice answers
+      const issueCounts = {};
+      responses.forEach((r) => {
+        const form = forms.find((f) => f.id === r.formId);
+        if (form && form.questions) {
+          form.questions.forEach((q, qIdx) => {
+            if (q.type === "multi_choice") {
+              const answers = r.answers?.[qIdx];
+              if (Array.isArray(answers)) {
+                answers.forEach((ans) => {
+                  issueCounts[ans] = (issueCounts[ans] || 0) + 1;
+                });
+              }
+            }
+          });
+        }
+        // Backwards compatibility
+        const legacyIssues = r.answers?.issues || [];
+        legacyIssues.forEach((issue) => {
+          issueCounts[issue] = (issueCounts[issue] || 0) + 1;
         });
-        return acc;
-      }, {});
+      });
+
       const topIssues = Object.entries(issueCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3);
@@ -804,117 +887,126 @@ const StudentDashboard = () => {
               Instructor: {currentForm.instructor}
             </Typography>
 
-            <Card
-              sx={{
-                mb: 3,
-                borderRadius: 3,
-                background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)",
-                border: "1px solid rgba(139, 92, 246, 0.2)",
-                boxShadow: "0 8px 25px rgba(139, 92, 246, 0.12)",
-              }}
-            >
-              <CardContent>
-                <FormControl component="fieldset" fullWidth>
-                  <FormLabel component="legend" sx={{ mb: 1, color: "#581c87" }}>
-                    The instructor explains concepts clearly (1-5)
-                  </FormLabel>
-                  <Rating
-                    name="rating"
-                    value={answers.rating}
-                    onChange={(_, value) =>
-                      setAnswers({
-                        ...answers,
-                        rating: value || 0,
-                      })
-                    }
-                  />
-                </FormControl>
-              </CardContent>
-            </Card>
+            {currentForm.questions.map((q, index) => {
+              const gradients = [
+                {
+                  background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)",
+                  border: "1px solid rgba(139, 92, 246, 0.2)",
+                  boxShadow: "0 8px 25px rgba(139, 92, 246, 0.12)",
+                  labelColor: "#581c87",
+                },
+                {
+                  background: "linear-gradient(135deg, #fef2f2 0%, #fce7f3 100%)",
+                  border: "1px solid rgba(236, 72, 153, 0.2)",
+                  boxShadow: "0 8px 25px rgba(236, 72, 153, 0.12)",
+                  labelColor: "#831843",
+                },
+                {
+                  background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                  border: "1px solid rgba(34, 197, 94, 0.2)",
+                  boxShadow: "0 8px 25px rgba(34, 197, 94, 0.12)",
+                  labelColor: "#15803d",
+                },
+                {
+                  background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                  border: "1px solid rgba(59, 130, 246, 0.2)",
+                  boxShadow: "0 8px 25px rgba(59, 130, 246, 0.12)",
+                  labelColor: "#1e3a8a",
+                },
+              ];
 
-            <Card
-              sx={{
-                mb: 3,
-                borderRadius: 3,
-                background: "linear-gradient(135deg, #fef2f2 0%, #fce7f3 100%)",
-                border: "1px solid rgba(236, 72, 153, 0.2)",
-                boxShadow: "0 8px 25px rgba(236, 72, 153, 0.12)",
-              }}
-            >
-              <CardContent>
-                <FormControl component="fieldset" fullWidth>
-                  <FormLabel component="legend" sx={{ mb: 1, color: "#831843" }}>
-                    What should improve?
-                  </FormLabel>
-                  <Stack>
-                    {[
-                      "More real-world examples",
-                      "Clearer assignments",
-                      "Improve pacing",
-                      "Better doubt support",
-                      "No issues",
-                    ].map((option) => (
-                      <FormControlLabel
-                        key={option}
-                        control={
-                          <Checkbox
-                            checked={answers.issues.includes(option)}
-                            onChange={(e) => {
-                              const nextIssues = e.target.checked
-                                ? [...answers.issues, option]
-                                : answers.issues.filter(
-                                    (value) => value !== option
-                                  );
-                              setAnswers({
-                                ...answers,
-                                issues: nextIssues,
-                              });
-                            }}
-                          />
-                        }
-                        label={option}
-                      />
-                    ))}
-                  </Stack>
-                </FormControl>
-              </CardContent>
-            </Card>
+              const style = gradients[index % gradients.length];
 
-            <Card
-              sx={{
-                mb: 3,
-                borderRadius: 3,
-                background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-                border: "1px solid rgba(34, 197, 94, 0.2)",
-                boxShadow: "0 8px 25px rgba(34, 197, 94, 0.12)",
-              }}
-            >
-              <CardContent>
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={3}
-                  label="One suggestion (optional)"
-                  placeholder="Keep it short and specific"
-                  value={answers.suggestion}
-                  onChange={(e) =>
-                    setAnswers({
-                      ...answers,
-                      suggestion: e.target.value,
-                    })
-                  }
+              return (
+                <Card
+                  key={index}
                   sx={{
-                    "& .MuiOutlinedInput-root": {
-                      color: "#15803d",
-                    },
-                    "& .MuiInputBase-input::placeholder": {
-                      color: "#15803d",
-                      opacity: 0.7,
-                    },
+                    mb: 3,
+                    borderRadius: 3,
+                    background: style.background,
+                    border: style.border,
+                    boxShadow: style.boxShadow,
                   }}
-                />
-              </CardContent>
-            </Card>
+                >
+                  <CardContent>
+                    <FormControl component="fieldset" fullWidth>
+                      <FormLabel component="legend" sx={{ mb: 1, color: style.labelColor }}>
+                        {q.question}
+                      </FormLabel>
+
+                      {q.type === "rating" && (
+                        <Rating
+                          name={`question-${index}`}
+                          value={answers[index] || 0}
+                          onChange={(_, value) =>
+                            setAnswers({ ...answers, [index]: value || 0 })
+                          }
+                        />
+                      )}
+
+                      {q.type === "single_choice" && (
+                        <RadioGroup
+                          value={answers[index] || ""}
+                          onChange={(e) =>
+                            setAnswers({ ...answers, [index]: e.target.value })
+                          }
+                        >
+                          {q.options.map((option, optIndex) => (
+                            <FormControlLabel
+                              key={optIndex}
+                              value={option}
+                              control={<Radio />}
+                              label={option}
+                            />
+                          ))}
+                        </RadioGroup>
+                      )}
+
+                      {q.type === "multi_choice" && (
+                        <Stack>
+                          {q.options.map((option, optIndex) => (
+                            <FormControlLabel
+                              key={optIndex}
+                              control={
+                                <Checkbox
+                                  checked={(answers[index] || []).includes(option)}
+                                  onChange={(e) => {
+                                    const currentAnswers = answers[index] || [];
+                                    const nextAnswers = e.target.checked
+                                      ? [...currentAnswers, option]
+                                      : currentAnswers.filter((v) => v !== option);
+                                    setAnswers({ ...answers, [index]: nextAnswers });
+                                  }}
+                                />
+                              }
+                              label={option}
+                            />
+                          ))}
+                        </Stack>
+                      )}
+
+                      {q.type === "text" && (
+                        <TextField
+                          fullWidth
+                          multiline
+                          minRows={3}
+                          placeholder="Your answer"
+                          value={answers[index] || ""}
+                          onChange={(e) =>
+                            setAnswers({ ...answers, [index]: e.target.value })
+                          }
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              color: style.labelColor,
+                            },
+                          }}
+                        />
+                      )}
+                    </FormControl>
+                  </CardContent>
+                </Card>
+              );
+            })}
 
             <Typography color="text.secondary" sx={{ mb: 3 }}>
               Submissions are anonymous by default. Your identity is hidden from
