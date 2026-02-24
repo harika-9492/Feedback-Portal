@@ -21,11 +21,31 @@ const Register = () => {
   const [role, setRole] = useState("student");
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  const strongPasswordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleRegister = () => {
     if (!name || !email || !registerNo || !password || !confirmPassword) {
       setMessage({ type: "error", text: "All fields are required." });
+      return;
+    }
+
+    // Email validation
+    if (!emailRegex.test(email)) {
+      setMessage({
+        type: "error",
+        text: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    const emailDomain = email.trim().toLowerCase().split("@")[1];
+    const validDomains = ["gmail.com", "yahoo.com", "outlook.com", "kluniversity.in", "klu.ac.in"];
+    
+    if (!validDomains.includes(emailDomain)) {
+      setMessage({
+        type: "error",
+        text: `Email must be from a valid domain (e.g., ${validDomains.join(", ")}).`,
+      });
       return;
     }
 
@@ -37,10 +57,25 @@ const Register = () => {
       return;
     }
 
-    if (!strongPasswordRegex.test(password)) {
+    // Detailed password validation
+    const passwordIssues = [];
+    if (password.length < 8) {
+      passwordIssues.push("at least 8 characters");
+    }
+    if (!/[A-Z]/.test(password)) {
+      passwordIssues.push("1 uppercase letter");
+    }
+    if (!/\d/.test(password)) {
+      passwordIssues.push("1 number");
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      passwordIssues.push("1 special character");
+    }
+
+    if (passwordIssues.length > 0) {
       setMessage({
         type: "error",
-        text: "Password must be at least 8 characters and include 1 uppercase letter, 1 number, and 1 special character.",
+        text: `Password is missing: ${passwordIssues.join(", ")}.`,
       });
       return;
     }
