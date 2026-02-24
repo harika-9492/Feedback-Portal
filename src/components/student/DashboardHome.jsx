@@ -20,57 +20,30 @@ const DashboardHome = ({ user, forms, responses }) => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              boxShadow: "0 10px 30px rgba(102, 126, 234, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Total Feedback Forms
-              </Typography>
-              <Typography variant="h4" sx={{ color: "white", fontWeight: 700 }}>
+              <Typography color="text.secondary">Total Feedback Forms</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
                 {totalForms}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #00d4ff 0%, #0099ff 100%)",
-              boxShadow: "0 10px 30px rgba(0, 212, 255, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Submitted By You
-              </Typography>
-              <Typography variant="h4" sx={{ color: "white", fontWeight: 700 }}>
+              <Typography color="text.secondary">Submitted By You</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
                 {submittedCount}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #f97316 0%, #fb923c 100%)",
-              boxShadow: "0 10px 30px rgba(249, 115, 22, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Pending For You
-              </Typography>
-              <Typography variant="h4" sx={{ color: "white", fontWeight: 700 }}>
+              <Typography color="text.secondary">Pending For You</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
                 {pendingCount}
               </Typography>
             </CardContent>
@@ -78,48 +51,31 @@ const DashboardHome = ({ user, forms, responses }) => {
         </Grid>
       </Grid>
 
-      <Card
-        sx={{
-          mb: 3,
-          borderRadius: 3,
-          background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
-          boxShadow: "0 10px 30px rgba(6, 182, 212, 0.25)",
-        }}
-      >
+      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ color: "white", fontWeight: 600 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
             My Courses
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {courseList.length === 0 ? (
-              <Typography sx={{ color: "rgba(255,255,255,0.8)" }}>
+              <Typography color="text.secondary">
                 No courses available yet.
               </Typography>
             ) : (
               courseList.map((course) => (
-                <Chip
-                  key={course}
-                  label={course}
-                  sx={{ mb: 1, background: "rgba(255,255,255,0.25)", color: "white" }}
-                />
+                <Chip key={course} label={course} sx={{ mb: 1 }} />
               ))
             )}
           </Stack>
         </CardContent>
       </Card>
 
-      <Card
-        sx={{
-          borderRadius: 3,
-          background: "linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)",
-          boxShadow: "0 10px 30px rgba(139, 92, 246, 0.25)",
-        }}
-      >
+      <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ color: "white", fontWeight: 600 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
             Feedback Guidance
           </Typography>
-          <Typography sx={{ color: "rgba(255,255,255,0.85)" }}>
+          <Typography color="text.secondary">
             Short, specific feedback helps the most. Use the multiple-choice and
             rating fields so results stay consistent and easy to analyze.
           </Typography>

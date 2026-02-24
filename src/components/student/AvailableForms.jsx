@@ -16,57 +16,30 @@ const AvailableForms = ({ forms, alreadySubmitted, setCurrentForm, setMessage, s
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-              boxShadow: "0 10px 30px rgba(79, 70, 229, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Total Forms
-              </Typography>
-              <Typography variant="h4" sx={{ color: "white", fontWeight: 700 }}>
+              <Typography color="text.secondary">Total Forms</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
                 {forms.length}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-              boxShadow: "0 10px 30px rgba(16, 185, 129, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Submitted
-              </Typography>
-              <Typography variant="h4" sx={{ color: "white", fontWeight: 700 }}>
+              <Typography color="text.secondary">Submitted</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
                 {submittedCount}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #ec4899 0%, #be185d 100%)",
-              boxShadow: "0 10px 30px rgba(236, 72, 153, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Pending
-              </Typography>
-              <Typography variant="h4" sx={{ color: "white", fontWeight: 700 }}>
+              <Typography color="text.secondary">Pending</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
                 {pendingCount}
               </Typography>
             </CardContent>

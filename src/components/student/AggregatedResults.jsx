@@ -79,60 +79,33 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
-              boxShadow: "0 10px 30px rgba(59, 130, 246, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Total Responses
-              </Typography>
-              <Typography variant="h4" sx={{ color: "white", fontWeight: 700 }}>
+              <Typography color="text.secondary">Total Responses</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
                 {totalResponses}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)",
-              boxShadow: "0 10px 30px rgba(244, 63, 94, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Overall Avg Rating
-              </Typography>
-              <Typography variant="h4" sx={{ color: "white", fontWeight: 700 }}>
+              <Typography color="text.secondary">Overall Avg Rating</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
                 {overallAverage}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)",
-              boxShadow: "0 10px 30px rgba(20, 184, 166, 0.3)",
-              color: "white",
-            }}
-          >
+          <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
             <CardContent>
-              <Typography sx={{ color: "rgba(255,255,255,0.8)", mb: 1 }}>
-                Top Issues
-              </Typography>
+              <Typography color="text.secondary">Top Issues</Typography>
               {topIssues.length === 0 ? (
                 <Typography
                   variant="body1"
-                  sx={{ mt: 1, color: "white", fontWeight: 600 }}
+                  sx={{ mt: 1, fontWeight: 600 }}
                 >
                   N/A
                 </Typography>
@@ -165,27 +138,19 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
               <Card
                 sx={{
                   borderRadius: 3,
-                  background:
-                    "linear-gradient(135deg, #f8fafc 0%, #ecfdf5 100%)",
-                  border: "2px solid rgba(16, 185, 129, 0.2)",
-                  boxShadow: "0 12px 35px rgba(16, 185, 129, 0.15)",
-                  "&:hover": {
-                    boxShadow: "0 16px 45px rgba(16, 185, 129, 0.25)",
-                    transform: "translateY(-4px)",
-                    transition: "all 0.3s ease",
-                  },
+                  boxShadow: "var(--shadow-1)",
                 }}
               >
                 <CardContent>
                   <Typography
                     variant="h5"
-                    sx={{ color: "#0f766e", fontWeight: 800, mb: 0.5 }}
+                    sx={{ fontWeight: 700, mb: 0.5 }}
                   >
                     {form.course}
                   </Typography>
                   <Typography
                     sx={{
-                      color: "#0d9488",
+                      color: "text.secondary",
                       mb: 2,
                       fontSize: "0.95rem",
                       fontWeight: 500,
@@ -198,8 +163,7 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                     <Box
                       sx={{
                         flex: 1,
-                        background:
-                          "linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)",
+                        background: "rgba(0, 0, 0, 0.04)",
                         padding: "12px 14px",
                         borderRadius: 2,
                         textAlign: "center",
@@ -207,7 +171,7 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                     >
                       <Typography
                         sx={{
-                          color: "#7f1d1d",
+                          color: "text.secondary",
                           fontSize: "0.8rem",
                           fontWeight: 600,
                           mb: 0.3,
@@ -217,7 +181,6 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                       </Typography>
                       <Typography
                         sx={{
-                          color: "#991b1b",
                           fontWeight: 800,
                           fontSize: "1.3rem",
                         }}
@@ -228,8 +191,7 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                     <Box
                       sx={{
                         flex: 1,
-                        background:
-                          "linear-gradient(135deg, #a5f3fc 0%, #67e8f9 100%)",
+                        background: "rgba(0, 0, 0, 0.04)",
                         padding: "12px 14px",
                         borderRadius: 2,
                         textAlign: "center",
@@ -237,7 +199,7 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                     >
                       <Typography
                         sx={{
-                          color: "#164e63",
+                          color: "text.secondary",
                           fontSize: "0.8rem",
                           fontWeight: 600,
                           mb: 0.3,
@@ -247,7 +209,6 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                       </Typography>
                       <Typography
                         sx={{
-                          color: "#0c4a6e",
                           fontWeight: 800,
                           fontSize: "1.3rem",
                         }}
@@ -258,26 +219,26 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                   </Stack>
 
                   <Divider
-                    sx={{ mb: 2, borderColor: "rgba(15, 118, 110, 0.15)" }}
+                    sx={{ mb: 2 }}
                   />
 
                   <Typography
                     variant="subtitle2"
-                    sx={{ color: "#0f766e", fontWeight: 700, mb: 1.2 }}
+                    sx={{ fontWeight: 700, mb: 1.2 }}
                   >
                     📊 Top Issues
                   </Typography>
                   {issues.length === 0 ? (
                     <Box
                       sx={{
-                        background: "rgba(15, 118, 110, 0.05)",
+                        background: "rgba(0, 0, 0, 0.02)",
                         padding: "10px",
                         borderRadius: 1.5,
-                        border: "1px solid rgba(15, 118, 110, 0.1)",
+                        border: "1px solid rgba(0, 0, 0, 0.08)",
                       }}
                     >
                       <Typography
-                        sx={{ color: "#0f766e", fontSize: "0.9rem" }}
+                        sx={{ fontSize: "0.9rem", color: "text.secondary" }}
                       >
                         ✓ No issues reported
                       </Typography>
@@ -291,15 +252,14 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            background: "rgba(15, 118, 110, 0.06)",
+                            background: "rgba(0, 0, 0, 0.03)",
                             padding: "8px 12px",
                             borderRadius: 1.5,
-                            border: "1px solid rgba(15, 118, 110, 0.12)",
+                            border: "1px solid rgba(0, 0, 0, 0.08)",
                           }}
                         >
                           <Typography
                             sx={{
-                              color: "#0d9488",
                               fontWeight: 500,
                               fontSize: "0.95rem",
                             }}
@@ -308,9 +268,7 @@ const AggregatedResults = ({ forms, responses, getAggregates }) => {
                           </Typography>
                           <Box
                             sx={{
-                              background:
-                                "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                              color: "white",
+                              background: "rgba(0, 0, 0, 0.1)",
                               padding: "2px 10px",
                               borderRadius: "20px",
                               fontSize: "0.85rem",
