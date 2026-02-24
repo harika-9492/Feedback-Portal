@@ -400,7 +400,6 @@ const FacultyDashboard = () => {
             color: "#0f172a",
             borderRight: "2px solid rgba(15, 118, 110, 0.22)",
             boxShadow: "2px 0 15px rgba(15, 118, 110, 0.12)",
-            marginTop: "64px",
           },
         }}
       >

@@ -232,7 +232,6 @@ const StudentDashboard = () => {
             background: "linear-gradient(180deg, #ecfdf5 0%, #cffafe 100%)",
             borderRight: "2px solid rgba(15, 118, 110, 0.25)",
             boxShadow: "2px 0 15px rgba(15, 118, 110, 0.15)",
-            marginTop: "64px",
           },
         }}
       >
