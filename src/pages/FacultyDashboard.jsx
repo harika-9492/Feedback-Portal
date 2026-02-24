@@ -2,10 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
-  AppBar,
   Toolbar,
-  Typography,
-  Button,
   Drawer,
   List,
   ListItem,
@@ -13,6 +10,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { AuthContext } from "../context/AuthContextValue";
+import DashboardHeader from "../components/DashboardHeader";
 import DashboardInsights from "../components/faculty/DashboardInsights";
 import CreateForm from "../components/faculty/CreateForm";
 import YourForms from "../components/faculty/YourForms";
@@ -70,7 +68,7 @@ const createBlankForm = () => ({
 });
 
 const FacultyDashboard = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -389,23 +387,7 @@ const FacultyDashboard = () => {
           "radial-gradient(1200px circle at 10% -10%, rgba(20, 184, 166, 0.2), transparent 55%), radial-gradient(1000px circle at 95% 8%, rgba(249, 115, 22, 0.18), transparent 55%), linear-gradient(135deg, #f8fafc 0%, #ecfeff 55%, #fff7ed 100%)",
       }}
     >
-      <AppBar
-        position="fixed"
-        sx={{
-          zIndex: 1201,
-          background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)",
-          boxShadow: "0 10px 25px rgba(15, 118, 110, 0.25)",
-        }}
-      >
-        <Toolbar>
-          <Typography sx={{ flexGrow: 1, fontWeight: "bold" }}>
-            Faculty Dashboard
-          </Typography>
-          <Button color="inherit" onClick={logout}>
-            Logout
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <DashboardHeader />
 
       <Drawer
         variant="permanent"
@@ -440,8 +422,7 @@ const FacultyDashboard = () => {
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 4 }}>
-        <Toolbar />
+      <Box component="main" sx={{ flexGrow: 1, p: 4, pt: 10 }}>
         {(selectedSection === "dashboard" || selectedSection === "") && renderInsights()}
         {selectedSection === "create-form" && (
           <CreateForm

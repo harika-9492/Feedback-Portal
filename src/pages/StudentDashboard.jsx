@@ -2,10 +2,7 @@ import React, { useContext, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
-  AppBar,
   Toolbar,
-  Typography,
-  Button,
   Drawer,
   List,
   ListItem,
@@ -26,6 +23,7 @@ import {
   Alert,
 } from "@mui/material";
 import { AuthContext } from "../context/AuthContextValue";
+import DashboardHeader from "../components/DashboardHeader";
 import DashboardHome from "../components/student/DashboardHome";
 import AvailableForms from "../components/student/AvailableForms";
 import MySubmissions from "../components/student/MySubmissions";
@@ -34,7 +32,7 @@ import AggregatedResults from "../components/student/AggregatedResults";
 const drawerWidth = 220;
 
 const StudentDashboard = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -221,23 +219,7 @@ const StudentDashboard = () => {
           "radial-gradient(1200px circle at 10% -10%, rgba(20, 184, 166, 0.18), transparent 55%), radial-gradient(900px circle at 90% 10%, rgba(249, 115, 22, 0.14), transparent 55%), linear-gradient(135deg, #f8fafc 0%, #ecfeff 55%, #fff7ed 100%)",
       }}
     >
-      <AppBar
-        position="fixed"
-        sx={{
-          zIndex: 1201,
-          background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)",
-          boxShadow: "0 12px 24px rgba(15, 118, 110, 0.25)",
-        }}
-      >
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Student Dashboard
-          </Typography>
-          <Button color="inherit" onClick={logout}>
-            Logout
-          </Button>
-        </Toolbar>
-      </AppBar>
+      <DashboardHeader />
 
       <Drawer
         variant="permanent"
@@ -298,9 +280,9 @@ const StudentDashboard = () => {
           flexGrow: 1,
           p: { xs: 3, md: 4 },
           minHeight: "100vh",
+          pt: 8,
         }}
       >
-        <Toolbar />
 
         {message.text && (
           <Alert severity={message.type} sx={{ mb: 2 }}>
