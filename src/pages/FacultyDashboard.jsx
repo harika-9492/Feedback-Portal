@@ -385,6 +385,7 @@ const FacultyDashboard = () => {
         minHeight: "100vh",
         background:
           "radial-gradient(1200px circle at 10% -10%, rgba(20, 184, 166, 0.2), transparent 55%), radial-gradient(1000px circle at 95% 8%, rgba(249, 115, 22, 0.18), transparent 55%), linear-gradient(135deg, #f8fafc 0%, #ecfeff 55%, #fff7ed 100%)",
+        marginTop: "64px",
       }}
     >
       <DashboardHeader />
@@ -399,6 +400,7 @@ const FacultyDashboard = () => {
             color: "#0f172a",
             borderRight: "2px solid rgba(15, 118, 110, 0.22)",
             boxShadow: "2px 0 15px rgba(15, 118, 110, 0.12)",
+            marginTop: "64px",
           },
         }}
       >
@@ -422,7 +424,7 @@ const FacultyDashboard = () => {
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 4, pt: 10 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 4 }}>
         {(selectedSection === "dashboard" || selectedSection === "") && renderInsights()}
         {selectedSection === "create-form" && (
           <CreateForm

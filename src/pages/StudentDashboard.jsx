@@ -217,6 +217,7 @@ const StudentDashboard = () => {
         minHeight: "100vh",
         background:
           "radial-gradient(1200px circle at 10% -10%, rgba(20, 184, 166, 0.18), transparent 55%), radial-gradient(900px circle at 90% 10%, rgba(249, 115, 22, 0.14), transparent 55%), linear-gradient(135deg, #f8fafc 0%, #ecfeff 55%, #fff7ed 100%)",
+        marginTop: "64px",
       }}
     >
       <DashboardHeader />
@@ -231,6 +232,7 @@ const StudentDashboard = () => {
             background: "linear-gradient(180deg, #ecfdf5 0%, #cffafe 100%)",
             borderRight: "2px solid rgba(15, 118, 110, 0.25)",
             boxShadow: "2px 0 15px rgba(15, 118, 110, 0.15)",
+            marginTop: "64px",
           },
         }}
       >
@@ -280,7 +282,6 @@ const StudentDashboard = () => {
           flexGrow: 1,
           p: { xs: 3, md: 4 },
           minHeight: "100vh",
-          pt: 8,
         }}
       >
 
