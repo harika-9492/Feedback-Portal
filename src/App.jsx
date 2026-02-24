@@ -19,7 +19,7 @@ function App() {
           <Route path="/register" element={<Register />} />
 
           <Route
-            path="/student"
+            path="/student/*"
             element={
               <ProtectedRoute role="student">
                 <StudentDashboard />
@@ -28,7 +28,7 @@ function App() {
           />
 
           <Route
-            path="/faculty"
+            path="/faculty/*"
             element={
               <ProtectedRoute role="faculty">
                 <AdminDashboard />

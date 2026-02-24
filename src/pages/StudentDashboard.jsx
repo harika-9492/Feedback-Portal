@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   AppBar,
@@ -44,7 +45,13 @@ const demoFormKeys = new Set([
 
 const StudentDashboard = () => {
   const { user, logout } = useContext(AuthContext);
-  const [selectedSection, setSelectedSection] = useState("dashboard");
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get current section from URL path
+  const pathParts = location.pathname.split("/");
+  const selectedSection = pathParts[2] || "dashboard";
+  
   const [forms] = useState(() => {
     const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
 
@@ -270,7 +277,8 @@ const StudentDashboard = () => {
         <List>
           <ListItem disablePadding>
             <ListItemButton
-              onClick={() => setSelectedSection("dashboard")}
+              onClick={() => navigate("/student")}
+              selected={selectedSection === "dashboard"}
             >
               <ListItemText primary="Dashboard" />
             </ListItemButton>
@@ -278,7 +286,8 @@ const StudentDashboard = () => {
 
           <ListItem disablePadding>
             <ListItemButton
-              onClick={() => setSelectedSection("forms")}
+              onClick={() => navigate("/student/forms")}
+              selected={selectedSection === "forms"}
             >
               <ListItemText primary="Available Forms" />
             </ListItemButton>
@@ -286,14 +295,18 @@ const StudentDashboard = () => {
 
           <ListItem disablePadding>
             <ListItemButton
-              onClick={() => setSelectedSection("submissions")}
+              onClick={() => navigate("/student/submissions")}
+              selected={selectedSection === "submissions"}
             >
               <ListItemText primary="My Submissions" />
             </ListItemButton>
           </ListItem>
 
           <ListItem disablePadding>
-            <ListItemButton onClick={() => setSelectedSection("results")}>
+            <ListItemButton 
+              onClick={() => navigate("/student/results")}
+              selected={selectedSection === "results"}
+            >
               <ListItemText primary="Aggregated Results" />
             </ListItemButton>
           </ListItem>

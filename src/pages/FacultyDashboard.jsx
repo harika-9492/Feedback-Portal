@@ -1,4 +1,5 @@
 import React, { useContext, useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   AppBar,
@@ -90,8 +91,13 @@ const createBlankForm = () => ({
 
 const FacultyDashboard = () => {
   const { user, logout } = useContext(AuthContext);
-
-  const [selectedSection, setSelectedSection] = useState("dashboard");
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get current section from URL path
+  const pathParts = location.pathname.split("/");
+  const selectedSection = pathParts[2] || "dashboard";
+  
   const [forms, setForms] = useState(() => {
     const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
     return storedForms.filter((form) => form.facultyEmail === user.email);
@@ -987,13 +993,16 @@ const FacultyDashboard = () => {
         <Toolbar />
         <List>
           {[
-            { key: "dashboard", label: "Insights" },
-            { key: "forms", label: "Create Forms" },
-            { key: "yourForms", label: "Your Forms" },
-            { key: "responses", label: "Responses" },
+            { key: "dashboard", label: "Insights", path: "/faculty" },
+            { key: "forms", label: "Create Forms", path: "/faculty/create-form" },
+            { key: "yourForms", label: "Your Forms", path: "/faculty/your-forms" },
+            { key: "responses", label: "Responses", path: "/faculty/responses" },
           ].map((item) => (
             <ListItem key={item.key} disablePadding>
-              <ListItemButton onClick={() => setSelectedSection(item.key)}>
+              <ListItemButton 
+                onClick={() => navigate(item.path)}
+                selected={selectedSection === item.key}
+              >
                 <ListItemText primary={item.label} />
               </ListItemButton>
             </ListItem>
