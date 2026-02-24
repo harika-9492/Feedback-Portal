@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContextValue";
+import { DEMO_USERS } from "../context/demoUsers";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -103,6 +104,17 @@ const Login = () => {
         >
           Login
         </Typography>
+
+        <Alert severity="info" sx={{ mt: 1, mb: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+            Demo Credentials
+          </Typography>
+          {DEMO_USERS.map((demoUser) => (
+            <Typography key={demoUser.email} variant="body2">
+              {demoUser.email} / {demoUser.password}
+            </Typography>
+          ))}
+        </Alert>
 
         {message.text && (
           <Alert severity={message.type} sx={{ mt: 1, mb: 2 }}>
