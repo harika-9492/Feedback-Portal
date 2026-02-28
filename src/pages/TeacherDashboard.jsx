@@ -67,7 +67,7 @@ const createBlankForm = () => ({
   ],
 });
 
-const FacultyDashboard = () => {
+const TeacherDashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -551,4 +551,4 @@ const FacultyDashboard = () => {
   );
 };
 
-export default FacultyDashboard;
+export default TeacherDashboard;

@@ -6,7 +6,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
-import AdminDashboard from "./pages/FacultyDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Home from "./pages/Home";
 
 function App() {
@@ -18,19 +19,31 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
+          {/* Student Route */}
           <Route
             path="/student/*"
             element={
-              <ProtectedRoute role="student">
+              <ProtectedRoute allowedRole="student">
                 <StudentDashboard />
               </ProtectedRoute>
             }
           />
 
+          {/* Teacher Route */}
           <Route
-            path="/faculty/*"
+            path="/teacher/*"
             element={
-              <ProtectedRoute role="faculty">
+              <ProtectedRoute allowedRole="teacher">
+                <TeacherDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Route */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute allowedRole="admin">
                 <AdminDashboard />
               </ProtectedRoute>
             }

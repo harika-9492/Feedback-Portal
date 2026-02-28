@@ -1,4 +1,17 @@
 export const DEMO_USERS = [
-  { email: "student@gmail.com", password: "Student@123", role: "student" },
-  { email: "faculty1@gmail.com", password: "Faculty@123", role: "faculty" },
+  {
+    email: "admin@gmail.com",
+    password: "Admin@123",
+    role: "admin",
+  },
+  {
+    email: "teacher@gmail.com",
+    password: "Teacher@123",
+    role: "teacher",
+  },
+  {
+    email: "student@gmail.com",
+    password: "Student@123",
+    role: "student",
+  },
 ];
