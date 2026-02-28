@@ -13,6 +13,10 @@ import { useNavigate } from "react-router-dom";
 const Home = () => {
   const navigate = useNavigate();
 
+  const handleRoleClick = (role) => {
+    navigate(`/login?role=${role}`);
+  };
+
   return (
     <Box
       className="page-fade"
@@ -25,40 +29,14 @@ const Home = () => {
         display: "flex",
         alignItems: "center",
         py: { xs: 6, md: 10 },
-        "&:before": {
-          content: '""',
-          position: "absolute",
-          top: -120,
-          right: -120,
-          width: 320,
-          height: 320,
-          borderRadius: "50%",
-          background: "rgba(14, 116, 144, 0.15)",
-          filter: "blur(2px)",
-        },
-        "&:after": {
-          content: '""',
-          position: "absolute",
-          bottom: -140,
-          left: -120,
-          width: 360,
-          height: 360,
-          borderRadius: "50%",
-          background: "rgba(249, 115, 22, 0.16)",
-          filter: "blur(2px)",
-        },
       }}
     >
-      <Container sx={{ position: "relative", zIndex: 1 }}>
+      <Container>
         <Typography
           variant="h3"
           align="center"
           gutterBottom
-          sx={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-          }}
+          sx={{ fontWeight: 700 }}
         >
           Student Feedback & Evaluation System
         </Typography>
@@ -67,68 +45,85 @@ const Home = () => {
           variant="h6"
           align="center"
           color="text.secondary"
-          sx={{ mb: 6, maxWidth: 720, mx: "auto" }}
+          sx={{ mb: 6 }}
         >
-          A smarter way to collect, analyze, and improve educational feedback.
+          Select your role to continue
         </Typography>
 
-        <Grid
-          container
-          spacing={4}
-          justifyContent="center"
-          sx={{ maxWidth: 960, mx: "auto" }}
-        >
-          <Grid item xs={12} md={6}>
+        <Grid container spacing={4} justifyContent="center">
+          {/* Student */}
+          <Grid item xs={12} md={4}>
             <Card
+              onClick={() => handleRoleClick("student")}
               sx={{
-                p: 2.5,
+                p: 3,
                 borderRadius: 3,
-                background: "rgba(255, 255, 255, 0.86)",
-                border: "1px solid rgba(255, 255, 255, 0.6)",
-                backdropFilter: "blur(12px)",
-                boxShadow: "var(--shadow-1)",
-                transition: "0.3s ease",
+                cursor: "pointer",
+                transition: "0.3s",
                 "&:hover": {
-                  transform: "translateY(-6px)",
-                  boxShadow: "var(--shadow-2)",
+                  transform: "translateY(-8px)",
+                  boxShadow: 6,
                 },
               }}
             >
               <CardContent>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700 }}>
-                  For Students
+                <Typography variant="h5" gutterBottom fontWeight={700}>
+                  Student
                 </Typography>
                 <Typography color="text.secondary">
-                  Submit course feedback, rate instructors, and help improve
-                  academic quality.
+                  Submit feedback and rate instructors.
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          {/* Teacher */}
+          <Grid item xs={12} md={4}>
             <Card
+              onClick={() => handleRoleClick("teacher")}
               sx={{
-                p: 2.5,
+                p: 3,
                 borderRadius: 3,
-                background: "rgba(255, 255, 255, 0.86)",
-                border: "1px solid rgba(255, 255, 255, 0.6)",
-                backdropFilter: "blur(12px)",
-                boxShadow: "var(--shadow-1)",
-                transition: "0.3s ease",
+                cursor: "pointer",
+                transition: "0.3s",
                 "&:hover": {
-                  transform: "translateY(-6px)",
-                  boxShadow: "var(--shadow-2)",
+                  transform: "translateY(-8px)",
+                  boxShadow: 6,
                 },
               }}
             >
               <CardContent>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 700 }}>
-                  For Admin / Teachers
+                <Typography variant="h5" gutterBottom fontWeight={700}>
+                  Teacher
                 </Typography>
                 <Typography color="text.secondary">
-                  Create feedback forms, analyze trends, and improve
-                  institutional performance.
+                  View feedback and analyze course performance.
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Admin */}
+          <Grid item xs={12} md={4}>
+            <Card
+              onClick={() => handleRoleClick("admin")}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                cursor: "pointer",
+                transition: "0.3s",
+                "&:hover": {
+                  transform: "translateY(-8px)",
+                  boxShadow: 6,
+                },
+              }}
+            >
+              <CardContent>
+                <Typography variant="h5" gutterBottom fontWeight={700}>
+                  Admin
+                </Typography>
+                <Typography color="text.secondary">
+                  Manage users, forms, and institutional analytics.
                 </Typography>
               </CardContent>
             </Card>
@@ -141,23 +136,11 @@ const Home = () => {
             display: "flex",
             justifyContent: "center",
             gap: 3,
-            flexWrap: "wrap",
           }}
         >
           <Button
             variant="contained"
             size="large"
-            sx={{
-              px: 5,
-              textTransform: "none",
-              fontWeight: 600,
-              background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)",
-              boxShadow: "0 14px 30px rgba(15, 118, 110, 0.28)",
-              "&:hover": {
-                background:
-                  "linear-gradient(135deg, #0f766e 0%, #0d9488 100%)",
-              },
-            }}
             onClick={() => navigate("/login")}
           >
             Login
@@ -166,18 +149,6 @@ const Home = () => {
           <Button
             variant="outlined"
             size="large"
-            sx={{
-              px: 5,
-              textTransform: "none",
-              fontWeight: 600,
-              borderColor: "rgba(15, 118, 110, 0.5)",
-              color: "#0f766e",
-              backgroundColor: "rgba(255, 255, 255, 0.6)",
-              "&:hover": {
-                borderColor: "rgba(15, 118, 110, 0.8)",
-                backgroundColor: "rgba(255, 255, 255, 0.9)",
-              },
-            }}
             onClick={() => navigate("/register")}
           >
             Register

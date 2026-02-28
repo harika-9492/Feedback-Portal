@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -7,17 +7,29 @@ import {
   Button,
   Link,
   Alert,
+  Chip,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContextValue";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useContext(AuthContext);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState(null);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  // Extract role from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const roleFromUrl = params.get("role");
+    if (roleFromUrl) {
+      setSelectedRole(roleFromUrl);
+    }
+  }, [location.search]);
 
   const handleLogin = () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
@@ -31,9 +43,17 @@ const Login = () => {
       return;
     }
 
+    // If role was selected from Home page, validate it
+    if (selectedRole && foundUser.role !== selectedRole) {
+      setMessage({
+        type: "error",
+        text: `You are not registered as ${selectedRole}`,
+      });
+      return;
+    }
+
     setMessage({ type: "", text: "" });
 
-    // Save user session
     login(
       foundUser.role,
       foundUser.email,
@@ -41,7 +61,6 @@ const Login = () => {
       foundUser.registerNo
     );
 
-    // Redirect based on role
     if (foundUser.role === "admin") {
       navigate("/admin");
     } else if (foundUser.role === "teacher") {
@@ -53,7 +72,6 @@ const Login = () => {
 
   return (
     <Box
-      className="page-fade"
       sx={{
         minHeight: "100vh",
         display: "flex",
@@ -75,6 +93,15 @@ const Login = () => {
         <Typography variant="h4" align="center" gutterBottom>
           Login
         </Typography>
+
+        {selectedRole && (
+          <Box sx={{ textAlign: "center", mb: 2 }}>
+            <Chip
+              label={`Logging in as ${selectedRole}`}
+              color="primary"
+            />
+          </Box>
+        )}
 
         {message.text && (
           <Alert severity={message.type} sx={{ mt: 1, mb: 2 }}>
