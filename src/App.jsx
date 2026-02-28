@@ -6,7 +6,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
-import AdminDashboard from "./pages/FacultyDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import FacultyDashboard from "./pages/FacultyDashboard";
 import Home from "./pages/Home";
 
 function App() {
@@ -31,6 +32,15 @@ function App() {
             path="/faculty/*"
             element={
               <ProtectedRoute role="faculty">
+                <FacultyDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute role="admin">
                 <AdminDashboard />
               </ProtectedRoute>
             }

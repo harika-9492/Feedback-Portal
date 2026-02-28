@@ -5,7 +5,6 @@ import {
   TextField,
   Typography,
   Button,
-  MenuItem,
   Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +17,6 @@ const Register = () => {
   const [registerNo, setRegisterNo] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("student");
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -100,7 +98,7 @@ const Register = () => {
       email: email.trim().toLowerCase(),
       registerNo: registerNo.trim(),
       password,
-      role,
+      role: "student",
     };
     users.push(newUser);
 
@@ -224,17 +222,9 @@ const Register = () => {
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
 
-        <TextField
-          select
-          fullWidth
-          label="Role"
-          margin="normal"
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-        >
-          <MenuItem value="student">Student</MenuItem>
-          <MenuItem value="faculty">Faculty</MenuItem>
-        </TextField>
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Student self-registration is enabled. Faculty and admin accounts are managed by the admin panel.
+        </Alert>
 
         <Button
           fullWidth

@@ -52,11 +52,15 @@ const DashboardHeader = () => {
   };
 
   const getRoleColor = (role) => {
-    return role === "faculty" ? "primary" : "success";
+    if (role === "admin") return "warning";
+    if (role === "faculty") return "primary";
+    return "success";
   };
 
   const getRoleLabel = (role) => {
-    return role === "faculty" ? "Faculty" : "Student";
+    if (role === "admin") return "Admin";
+    if (role === "faculty") return "Faculty";
+    return "Student";
   };
 
   return (
@@ -182,7 +186,7 @@ const DashboardHeader = () => {
                 Role
               </Typography>
               <Typography variant="body2">
-                {getRoleLabel(user?.role)} {user?.role === "faculty" ? "👨‍🏫" : "👨‍🎓"}
+                {getRoleLabel(user?.role)} {user?.role === "faculty" ? "👨‍🏫" : user?.role === "admin" ? "🛠️" : "👨‍🎓"}
               </Typography>
             </Box>
 

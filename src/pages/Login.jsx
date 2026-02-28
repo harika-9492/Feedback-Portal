@@ -33,12 +33,17 @@ const Login = () => {
 
     setMessage({ type: "", text: "" });
 
-    const normalizedRole =
-      foundUser.role === "admin" ? "faculty" : foundUser.role;
+    login({
+      role: foundUser.role,
+      email: foundUser.email,
+      name: foundUser.name,
+      registerNo: foundUser.registerNo,
+      department: foundUser.department || "",
+    });
 
-    login(normalizedRole, foundUser.email, foundUser.name, foundUser.registerNo);
-
-    if (normalizedRole === "faculty") {
+    if (foundUser.role === "admin") {
+      navigate("/admin");
+    } else if (foundUser.role === "faculty") {
       navigate("/faculty");
     } else {
       navigate("/student");

@@ -1,470 +1,76 @@
 import React, { useContext, useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
+  Alert,
   Box,
-  Toolbar,
+  Card,
+  CardContent,
   Drawer,
+  FormControl,
+  Grid,
+  InputLabel,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
+  MenuItem,
+  Select,
+  Toolbar,
+  Typography,
 } from "@mui/material";
-import { AuthContext } from "../context/AuthContextValue";
 import DashboardHeader from "../components/DashboardHeader";
-import DashboardInsights from "../components/faculty/DashboardInsights";
-import CreateForm from "../components/faculty/CreateForm";
-import YourForms from "../components/faculty/YourForms";
-import ResponseViewer from "../components/faculty/ResponseViewer";
+import FormAnalyticsCharts from "../components/analytics/FormAnalyticsCharts";
+import { AuthContext } from "../context/AuthContextValue";
+import {
+  getAnalyticsByForm,
+  getFacultyAssignedForms,
+  getResponses,
+  refreshAnalyticsData,
+} from "../utils/feedbackData";
 
 const drawerWidth = 240;
 
-const templates = [
-  {
-    name: "Teaching Quality Template",
-    description: "Balanced set for delivery quality and clarity.",
-    questions: [
-      { question: "Clarity of explanation", type: "rating", options: [] },
-      {
-        question: "Lecture pace",
-        type: "single_choice",
-        options: ["Too fast", "Appropriate", "Too slow"],
-      },
-      {
-        question: "Was the instructor approachable?",
-        type: "single_choice",
-        options: ["Yes", "No"],
-      },
-      { question: "Suggestions for improvement", type: "text", options: [] },
-    ],
-  },
-  {
-    name: "Course Structure Template",
-    description: "Checks syllabus, assessments, and relevance.",
-    questions: [
-      { question: "Course content relevance", type: "rating", options: [] },
-      {
-        question: "Was syllabus well organized?",
-        type: "single_choice",
-        options: ["Yes", "Partly", "No"],
-      },
-      { question: "Difficulty level", type: "rating", options: [] },
-      { question: "Additional comments", type: "text", options: [] },
-    ],
-  },
-];
-
-const createBlankForm = () => ({
-  course: "",
-  instructor: "",
-  description: "",
-  published: false,
-  questions: [
-    {
-      question: "",
-      type: "text",
-      options: [],
-    },
-  ],
-});
+const getFormDisplayLabel = (form) => {
+  const legacyLabel = [form.course, form.subject, form.title].filter(Boolean).join(" - ");
+  if (legacyLabel) return legacyLabel;
+  return [form.course, form.description].filter(Boolean).join(" • ") || `Form ${form.id}`;
+};
 
 const FacultyDashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Get current section from URL path
-  const pathParts = location.pathname.split("/");
-  const selectedSection = pathParts[2] || "dashboard";
-  
-  const [forms, setForms] = useState(() => {
-    const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
-    return storedForms.filter((form) => form.facultyEmail === user.email);
-  });
-  const [responses, setResponses] = useState(
-    () => JSON.parse(localStorage.getItem("responses")) || []
+  const selectedSection = location.pathname.split("/")[2] || "dashboard";
+
+  const [assignedForms] = useState(() => getFacultyAssignedForms(user.email));
+  const [responses] = useState(() => getResponses());
+  const [analyticsByForm, setAnalyticsByForm] = useState(() => getAnalyticsByForm());
+  const [selectedFormId, setSelectedFormId] = useState("");
+
+  const refresh = () => {
+    setAnalyticsByForm(refreshAnalyticsData());
+  };
+
+  const formResponseCount = useMemo(
+    () =>
+      assignedForms.reduce((sum, form) => {
+        return sum + responses.filter((response) => response.formId === form.id).length;
+      }, 0),
+    [assignedForms, responses]
   );
-  const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [newForm, setNewForm] = useState(createBlankForm());
-  const [message, setMessage] = useState({ type: "", text: "" });
-  const [pendingDeleteFormId, setPendingDeleteFormId] = useState(null);
 
-  const formById = useMemo(() => {
-    return new Map(forms.map((form) => [form.id, form]));
-  }, [forms]);
+  const averageAssignedRating = useMemo(() => {
+    if (!assignedForms.length) return 0;
 
-  const getRatingValues = (response, form) => {
-    if (!response || !form?.questions) {
-      const legacyRating = response?.answers?.rating;
-      return typeof legacyRating === "number" && legacyRating > 0 ? [legacyRating] : [];
-    }
+    const total = assignedForms.reduce((sum, form) => {
+      const analytics = analyticsByForm[form.id];
+      return sum + (analytics?.overallRating || 0);
+    }, 0);
 
-    const values = [];
-    form.questions.forEach((question, questionIndex) => {
-      if (question.type !== "rating") return;
-      const value = response.answers?.[questionIndex];
-      if (typeof value === "number" && value > 0) {
-        values.push(value);
-      }
-    });
+    return Number((total / assignedForms.length).toFixed(2));
+  }, [assignedForms, analyticsByForm]);
 
-    const legacyRating = response.answers?.rating;
-    if (values.length === 0 && typeof legacyRating === "number" && legacyRating > 0) {
-      values.push(legacyRating);
-    }
-
-    return values;
-  };
-
-  const getSelectableAnswers = (response, form) => {
-    const values = [];
-
-    if (form?.questions) {
-      form.questions.forEach((question, questionIndex) => {
-        if (question.type === "single_choice") {
-          const answer = response.answers?.[questionIndex];
-          if (typeof answer === "string" && answer.trim()) {
-            values.push(answer.trim());
-          }
-        }
-
-        if (question.type === "multi_choice") {
-          const answerList = response.answers?.[questionIndex];
-          if (Array.isArray(answerList)) {
-            answerList.forEach((item) => {
-              if (typeof item === "string" && item.trim()) {
-                values.push(item.trim());
-              }
-            });
-          }
-        }
-      });
-    }
-
-    const legacyIssues = response.answers?.issues;
-    if (Array.isArray(legacyIssues)) {
-      legacyIssues.forEach((item) => {
-        if (typeof item === "string" && item.trim()) {
-          values.push(item.trim());
-        }
-      });
-    }
-
-    return values;
-  };
-
-  const getTextSuggestions = (response, form) => {
-    const values = [];
-
-    if (form?.questions) {
-      form.questions.forEach((question, questionIndex) => {
-        if (question.type !== "text") return;
-        const answer = response.answers?.[questionIndex];
-        if (typeof answer === "string" && answer.trim()) {
-          values.push(answer.trim());
-        }
-      });
-    }
-
-    const legacySuggestion = response.answers?.suggestion;
-    if (typeof legacySuggestion === "string" && legacySuggestion.trim()) {
-      values.push(legacySuggestion.trim());
-    }
-
-    return values;
-  };
-
-  const refreshData = () => {
-    const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
-    const storedResponses = JSON.parse(localStorage.getItem("responses")) || [];
-
-    setForms(storedForms.filter((f) => f.facultyEmail === user.email));
-    setResponses(storedResponses);
-  };
-
-  const handleTemplateSelect = (templateName) => {
-    const template = templates.find((t) => t.name === templateName);
-    if (!template) return;
-
-    setSelectedTemplate(templateName);
-    setNewForm((prev) => ({
-      ...prev,
-      description: template.description,
-      questions: template.questions.map((q) => ({
-        question: q.question,
-        type: q.type,
-        options: Array.isArray(q.options) ? [...q.options] : [],
-      })),
-    }));
-  };
-
-  const addQuestion = () => {
-    setNewForm((prev) => ({
-      ...prev,
-      questions: [
-        ...prev.questions,
-        { question: "", type: "text", options: [] },
-      ],
-    }));
-  };
-
-  const updateQuestion = (index, key, value) => {
-    setNewForm((prev) => {
-      const updatedQuestions = [...prev.questions];
-      const nextQuestion = { ...updatedQuestions[index], [key]: value };
-
-      if (key === "type" && value !== "single_choice") {
-        nextQuestion.options = [];
-      }
-
-      updatedQuestions[index] = nextQuestion;
-      return { ...prev, questions: updatedQuestions };
-    });
-  };
-
-  const removeQuestion = (index) => {
-    setNewForm((prev) => {
-      if (prev.questions.length === 1) return prev;
-
-      return {
-        ...prev,
-        questions: prev.questions.filter((_, i) => i !== index),
-      };
-    });
-  };
-
-  const addOption = (questionIndex) => {
-    setNewForm((prev) => {
-      const updatedQuestions = [...prev.questions];
-      const currentOptions = updatedQuestions[questionIndex].options || [];
-      updatedQuestions[questionIndex] = {
-        ...updatedQuestions[questionIndex],
-        options: [...currentOptions, ""],
-      };
-
-      return { ...prev, questions: updatedQuestions };
-    });
-  };
-
-  const updateOption = (questionIndex, optionIndex, value) => {
-    setNewForm((prev) => {
-      const updatedQuestions = [...prev.questions];
-      const updatedOptions = [...(updatedQuestions[questionIndex].options || [])];
-      updatedOptions[optionIndex] = value;
-
-      updatedQuestions[questionIndex] = {
-        ...updatedQuestions[questionIndex],
-        options: updatedOptions,
-      };
-
-      return { ...prev, questions: updatedQuestions };
-    });
-  };
-
-  const removeOption = (questionIndex, optionIndex) => {
-    setNewForm((prev) => {
-      const updatedQuestions = [...prev.questions];
-      updatedQuestions[questionIndex] = {
-        ...updatedQuestions[questionIndex],
-        options: (updatedQuestions[questionIndex].options || []).filter(
-          (_, idx) => idx !== optionIndex
-        ),
-      };
-
-      return { ...prev, questions: updatedQuestions };
-    });
-  };
-
-  const isFormValid = (formPayload) => {
-    if (!formPayload.course.trim() || !formPayload.instructor.trim()) {
-      return "Course and instructor are required.";
-    }
-
-    const hasInvalidQuestion = formPayload.questions.some(
-      (q) => !q.question.trim()
-    );
-    if (hasInvalidQuestion) {
-      return "Each question must have text.";
-    }
-
-    const hasInvalidOptions = formPayload.questions.some((q) => {
-      if (q.type !== "single_choice") return false;
-      const cleaned = (q.options || []).map((opt) => opt.trim()).filter(Boolean);
-      return cleaned.length < 2;
-    });
-
-    if (hasInvalidOptions) {
-      return "Single-choice questions need at least 2 options.";
-    }
-
-    return "";
-  };
-
-  const handleSaveForm = ({ publishNow = false } = {}) => {
-    const normalizedQuestions = newForm.questions.map((q) => ({
-      question: q.question.trim(),
-      type: q.type,
-      options:
-        q.type === "single_choice"
-          ? (q.options || []).map((opt) => opt.trim()).filter(Boolean)
-          : [],
-    }));
-
-    const formPayload = {
-      ...newForm,
-      course: newForm.course.trim(),
-      instructor: newForm.instructor.trim(),
-      description: newForm.description.trim(),
-      questions: normalizedQuestions,
-    };
-
-    const validationMessage = isFormValid(formPayload);
-    if (validationMessage) {
-      setMessage({ type: "error", text: validationMessage });
-      return;
-    }
-
-    const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
-
-    const updatedForm = {
-      ...formPayload,
-      published: publishNow ? true : formPayload.published,
-      facultyEmail: user.email,
-    };
-
-    const updatedForms = [
-      ...storedForms,
-      {
-        ...updatedForm,
-        id: Date.now(),
-        createdAt: new Date().toISOString(),
-      },
-    ];
-
-    localStorage.setItem("forms", JSON.stringify(updatedForms));
-    refreshData();
-
-    setMessage({
-      type: "success",
-      text: publishNow
-        ? "Form created and sent to students."
-        : "Form saved successfully.",
-    });
-
-    setSelectedTemplate("");
-    setNewForm(createBlankForm());
-  };
-
-  const handleDeleteForm = (formId) => {
-    const storedForms = JSON.parse(localStorage.getItem("forms")) || [];
-    const storedResponses = JSON.parse(localStorage.getItem("responses")) || [];
-
-    const updatedForms = storedForms.filter((form) => form.id !== formId);
-    const updatedResponses = storedResponses.filter(
-      (response) => response.formId !== formId
-    );
-
-    localStorage.setItem("forms", JSON.stringify(updatedForms));
-    localStorage.setItem("responses", JSON.stringify(updatedResponses));
-
-    setMessage({ type: "success", text: "Form deleted successfully." });
-    setPendingDeleteFormId(null);
-    refreshData();
-  };
-
-  const formStats = useMemo(() => {
-    const totalForms = forms.length;
-    const publishedForms = forms.filter((form) => form.published).length;
-
-    const allResponses = responses.filter((response) =>
-      forms.some((form) => form.id === response.formId)
-    );
-
-    const ratings = allResponses.flatMap((response) => {
-      const form = formById.get(response.formId);
-      return getRatingValues(response, form);
-    });
-
-    const averageRating = ratings.length
-      ? (ratings.reduce((sum, value) => sum + value, 0) / ratings.length).toFixed(1)
-      : "N/A";
-
-    const lowResponseForms = forms.filter((form) => {
-      const total = responses.filter((response) => response.formId === form.id).length;
-      return total < 3;
-    }).length;
-
-    return {
-      totalForms,
-      publishedForms,
-      totalResponses: allResponses.length,
-      averageRating,
-      lowResponseForms,
-    };
-  }, [forms, responses, formById]);
-
-  const facultyResponses = useMemo(() => {
-    return responses.filter((response) => forms.some((form) => form.id === response.formId));
-  }, [forms, responses]);
-
-  const responsesByFormData = useMemo(() => {
-    return forms
-      .map((form) => {
-        const total = responses.filter((response) => response.formId === form.id).length;
-        return {
-          name: form.course.length > 14 ? `${form.course.slice(0, 14)}...` : form.course,
-          responses: total,
-        };
-      })
-      .slice(0, 8);
-  }, [forms, responses]);
-
-  const publishStatusData = useMemo(() => {
-    const draftForms = Math.max(formStats.totalForms - formStats.publishedForms, 0);
-    return [
-      { name: "Sent", value: formStats.publishedForms },
-      { name: "Draft", value: draftForms },
-    ].filter((item) => item.value > 0);
-  }, [formStats.totalForms, formStats.publishedForms]);
-
-  const issueData = useMemo(() => {
-    const counts = facultyResponses.reduce((acc, response) => {
-      const form = formById.get(response.formId);
-      const issues = getSelectableAnswers(response, form);
-
-      issues.forEach((issue) => {
-        if (!issue) return;
-        acc[issue] = (acc[issue] || 0) + 1;
-      });
-      return acc;
-    }, {});
-
-    return Object.entries(counts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
-  }, [facultyResponses, formById]);
-
-  const recentSuggestions = useMemo(() => {
-    return facultyResponses
-      .flatMap((response) => {
-        const form = formById.get(response.formId);
-        return getTextSuggestions(response, form);
-      })
-      .slice(-5)
-      .reverse();
-  }, [facultyResponses, formById]);
-
-  const renderInsights = () => (
-    <DashboardInsights
-      user={user}
-      message={message}
-      formStats={formStats}
-      responsesByFormData={responsesByFormData}
-      publishStatusData={publishStatusData}
-      issueData={issueData}
-      recentSuggestions={recentSuggestions}
-    />
-  );
+  const selectedAnalytics = selectedFormId ? analyticsByForm[selectedFormId] : null;
 
   return (
     <Box
@@ -472,7 +78,7 @@ const FacultyDashboard = () => {
         display: "flex",
         minHeight: "100vh",
         background:
-          "radial-gradient(1200px circle at 10% -10%, rgba(20, 184, 166, 0.2), transparent 55%), radial-gradient(1000px circle at 95% 8%, rgba(249, 115, 22, 0.18), transparent 55%), linear-gradient(135deg, #f8fafc 0%, #ecfeff 55%, #fff7ed 100%)",
+          "radial-gradient(1200px circle at 10% -10%, rgba(20, 184, 166, 0.18), transparent 55%), radial-gradient(900px circle at 90% 10%, rgba(249, 115, 22, 0.14), transparent 55%), linear-gradient(135deg, #f8fafc 0%, #ecfeff 55%, #fff7ed 100%)",
         marginTop: "64px",
       }}
     >
@@ -484,68 +90,133 @@ const FacultyDashboard = () => {
           width: drawerWidth,
           [`& .MuiDrawer-paper`]: {
             width: drawerWidth,
+            boxSizing: "border-box",
             background: "linear-gradient(180deg, #ecfdf5 0%, #cffafe 100%)",
-            color: "#0f172a",
-            borderRight: "2px solid rgba(15, 118, 110, 0.22)",
-            boxShadow: "2px 0 15px rgba(15, 118, 110, 0.12)",
+            borderRight: "2px solid rgba(15, 118, 110, 0.25)",
           },
         }}
       >
         <Toolbar />
         <List>
-          {[
-            { key: "dashboard", label: "Insights", path: "/faculty" },
-            { key: "create-form", label: "Create Forms", path: "/faculty/create-form" },
-            { key: "your-forms", label: "Your Forms", path: "/faculty/your-forms" },
-            { key: "responses", label: "Responses", path: "/faculty/responses" },
-          ].map((item) => (
-            <ListItem key={item.key} disablePadding>
-              <ListItemButton 
-                onClick={() => navigate(item.path)}
-                selected={selectedSection === item.key}
-              >
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            </ListItem>
-          ))}
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => navigate("/faculty")}
+              selected={selectedSection === "dashboard"}
+            >
+              <ListItemText primary="Summary" />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => navigate("/faculty/analytics")}
+              selected={selectedSection === "analytics"}
+            >
+              <ListItemText primary="My Analytics" />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 4 }}>
-        {(selectedSection === "dashboard" || selectedSection === "") && renderInsights()}
-        {selectedSection === "create-form" && (
-          <CreateForm
-            selectedTemplate={selectedTemplate}
-            newForm={newForm}
-            setNewForm={setNewForm}
-            templates={templates}
-            message={message}
-            handleTemplateSelect={handleTemplateSelect}
-            addQuestion={addQuestion}
-            removeQuestion={removeQuestion}
-            updateQuestion={updateQuestion}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateOption={updateOption}
-            handleSaveForm={handleSaveForm}
-            selectedSection={selectedSection}
-          />
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 3, md: 4 } }}>
+        {selectedSection === "analytics" ? (
+          <>
+            <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)", mb: 3 }}>
+              <CardContent>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
+                  Analytics for Assigned Forms
+                </Typography>
+                <FormControl sx={{ minWidth: 340 }}>
+                  <InputLabel>Select Assigned Form</InputLabel>
+                  <Select
+                    value={selectedFormId}
+                    label="Select Assigned Form"
+                    onChange={(event) => setSelectedFormId(event.target.value)}
+                  >
+                    {assignedForms.map((form) => (
+                      <MenuItem key={form.id} value={String(form.id)}>
+                        {getFormDisplayLabel(form)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </CardContent>
+            </Card>
+
+            <FormAnalyticsCharts analytics={selectedAnalytics} />
+          </>
+        ) : (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
+                <CardContent>
+                  <Typography color="text.secondary">Assigned Forms</Typography>
+                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>
+                    {assignedForms.length}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
+                <CardContent>
+                  <Typography color="text.secondary">Student Submissions</Typography>
+                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>
+                    {formResponseCount}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
+                <CardContent>
+                  <Typography color="text.secondary">Average Rating</Typography>
+                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>
+                    {averageAssignedRating.toFixed(2)} / 5
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)" }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    Assigned Form List
+                  </Typography>
+                  {assignedForms.length === 0 ? (
+                    <Alert severity="info">No forms are assigned to your account yet.</Alert>
+                  ) : (
+                    assignedForms.map((form) => (
+                      <Box key={form.id} sx={{ mb: 1.5 }}>
+                        <Typography sx={{ fontWeight: 600 }}>
+                          {form.title || form.course || `Form ${form.id}`}
+                        </Typography>
+                        <Typography color="text.secondary">{form.description || form.subject || ""}</Typography>
+                      </Box>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
         )}
-        {selectedSection === "your-forms" && (
-          <YourForms
-            forms={forms}
-            responses={responses}
-            pendingDeleteFormId={pendingDeleteFormId}
-            setPendingDeleteFormId={setPendingDeleteFormId}
-            handleDeleteForm={handleDeleteForm}
-          />
-        )}
-        {selectedSection === "responses" && (
-          <ResponseViewer
-            forms={forms}
-            responses={responses}
-          />
-        )}
+
+        <Box sx={{ mt: 2 }}>
+          <Typography
+            component="button"
+            onClick={refresh}
+            sx={{
+              border: 0,
+              p: 0,
+              background: "none",
+              color: "primary.main",
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+          >
+            Refresh analytics
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );
