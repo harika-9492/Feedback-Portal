@@ -1,5 +1,5 @@
-import DashboardLayout from "./DashboardLayout";
-import DashboardHeader from "./DashboardHeader";
+import DashboardLayout from "../components/DashboardLayout";
+import DashboardHeader from "../components/DashboardHeader";
 
 const AdminDashboard = () => {
   return (
