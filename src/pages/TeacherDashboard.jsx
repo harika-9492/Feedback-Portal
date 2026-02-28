@@ -11,10 +11,10 @@ import {
 } from "@mui/material";
 import { AuthContext } from "../context/AuthContextValue";
 import DashboardHeader from "../components/DashboardHeader";
-import DashboardInsights from "../components/faculty/DashboardInsights";
-import CreateForm from "../components/faculty/CreateForm";
-import YourForms from "../components/faculty/YourForms";
-import ResponseViewer from "../components/faculty/ResponseViewer";
+import DashboardInsights from "../components/teacher/DashboardInsights";
+import CreateForm from "../components/teacher/CreateForm";
+import ResponseViewer from "../components/teacher/ResponseViewer";
+import YourForms from "../components/teacher/YourForms";
 
 const drawerWidth = 240;
 
