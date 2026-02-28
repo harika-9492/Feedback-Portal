@@ -151,6 +151,12 @@ const Login = () => {
           Login
         </Button>
 
+        <Alert severity="info" sx={{ mt: 2 }}>
+          <Typography sx={{ fontWeight: 700, mb: 0.5 }}>Demo Credentials (Faculty 1)</Typography>
+          <Typography variant="body2">Email: faculty1@college.edu</Typography>
+          <Typography variant="body2">Password: Faculty@123</Typography>
+        </Alert>
+
         <Typography align="center" sx={{ mt: 2 }}>
           Don't have an account?{" "}
           <Link
