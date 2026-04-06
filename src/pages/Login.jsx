@@ -10,6 +10,9 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContextValue";
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,34 +22,38 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  const handleLogin = () => {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+  const handleLogin = async () => {
+    try {
+      setMessage({ type: "", text: "" });
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+        email: email.trim().toLowerCase(),
+        password,
+      });
 
-    const foundUser = users.find(
-      (u) => u.email === email && u.password === password
-    );
+      const userData = response.data?.user;
+      if (!userData) {
+        setMessage({ type: "error", text: "Invalid response from server" });
+        return;
+      }
 
-    if (!foundUser) {
-      setMessage({ type: "error", text: "Invalid credentials" });
-      return;
-    }
+      login({
+        role: userData.role,
+        email: userData.email,
+        name: userData.name,
+        registerNo: userData.registerNo,
+        department: userData.department || "",
+      });
 
-    setMessage({ type: "", text: "" });
-
-    login({
-      role: foundUser.role,
-      email: foundUser.email,
-      name: foundUser.name,
-      registerNo: foundUser.registerNo,
-      department: foundUser.department || "",
-    });
-
-    if (foundUser.role === "admin") {
-      navigate("/admin");
-    } else if (foundUser.role === "faculty") {
-      navigate("/faculty");
-    } else {
-      navigate("/student");
+      if (userData.role === "admin") {
+        navigate("/admin");
+      } else if (userData.role === "faculty") {
+        navigate("/faculty");
+      } else {
+        navigate("/student");
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || "Invalid credentials";
+      setMessage({ type: "error", text: errorMsg });
     }
   };
 

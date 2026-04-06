@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
@@ -31,7 +31,6 @@ import MySubmissions from "../components/student/MySubmissions";
 import {
   getResponses,
   getStudentForms,
-  hasStudentSubmitted,
   submitFormResponse,
 } from "../utils/feedbackData";
 
@@ -43,13 +42,24 @@ const StudentDashboard = () => {
   const location = useLocation();
   const selectedSection = location.pathname.split("/")[2] || "dashboard";
 
-  const [forms] = useState(() => getStudentForms());
-  const [responses, setResponses] = useState(() => getResponses());
+  const [forms, setForms] = useState([]);
+  const [responses, setResponses] = useState([]);
   const [currentForm, setCurrentForm] = useState(null);
   const [answers, setAnswers] = useState({});
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    Promise.all([getStudentForms(), getResponses()])
+      .then(([formsData, responsesData]) => {
+        setForms(formsData);
+        setResponses(responsesData);
+      })
+      .catch(() => {
+        setMessage({ type: "error", text: "Failed to load student data." });
+      });
+  }, []);
+
+  const handleSubmit = async () => {
     const unansweredQuestions = currentForm.questions.filter((question, index) => {
       const answer = answers[index];
 
@@ -73,20 +83,28 @@ const StudentDashboard = () => {
       return;
     }
 
-    submitFormResponse({
-      formId: currentForm.id,
-      submittedBy: user.email,
-      answers,
-      date: new Date().toLocaleString(),
-    });
+    try {
+      await submitFormResponse({
+        formId: currentForm.id,
+        submittedBy: user.email,
+        answers,
+        date: new Date().toLocaleString(),
+      });
 
-    setResponses(getResponses());
-    setCurrentForm(null);
-    setAnswers({});
-    setMessage({ type: "success", text: "Feedback submitted successfully." });
+      const latestResponses = await getResponses();
+      setResponses(latestResponses);
+      setCurrentForm(null);
+      setAnswers({});
+      setMessage({ type: "success", text: "Feedback submitted successfully." });
+    } catch {
+      setMessage({ type: "error", text: "Failed to submit feedback." });
+    }
   };
 
-  const alreadySubmitted = (formId) => hasStudentSubmitted(formId, user.email);
+  const alreadySubmitted = (formId) =>
+    responses.some(
+      (response) => response.formId === formId && response.submittedBy === user.email
+    );
 
   const getFormLabel = (formId) => {
     const form = forms.find((value) => value.id === formId);

@@ -8,6 +8,9 @@ import {
   Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -21,7 +24,7 @@ const Register = () => {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!name || !email || !registerNo || !password || !confirmPassword) {
       setMessage({ type: "error", text: "All fields are required." });
       return;
@@ -78,39 +81,33 @@ const Register = () => {
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-
-    const existingUser = users.find(
-      (u) =>
-        u.email.toLowerCase() === email.trim().toLowerCase() ||
-        (u.registerNo && u.registerNo === registerNo.trim())
-    );
-    if (existingUser) {
-      setMessage({
-        type: "error",
-        text: "User already exists with this email or register number.",
-      });
-      return;
-    }
-
     const newUser = {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       registerNo: registerNo.trim(),
       password,
-      role: "student",
+      department: "",
     };
-    users.push(newUser);
 
-    localStorage.setItem("users", JSON.stringify(users));
-    setMessage({
-      type: "success",
-      text: "Registered successfully! Redirecting to login...",
-    });
+    try {
+      setMessage({ type: "", text: "" });
+      await axios.post(`${API_BASE_URL}/auth/register`, newUser);
 
-    setTimeout(() => {
-      navigate("/login");
-    }, 1200);
+      setMessage({
+        type: "success",
+        text: "Registered successfully! Redirecting to login...",
+      });
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1200);
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || "Registration failed. Please try again.";
+      setMessage({
+        type: "error",
+        text: errorMsg,
+      });
+    }
   };
 
   return (

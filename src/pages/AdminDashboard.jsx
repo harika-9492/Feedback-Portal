@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -27,7 +27,6 @@ import { AuthContext } from "../context/AuthContextValue";
 import {
   addFacultyUser,
   createFeedbackForm,
-  getAnalyticsByForm,
   getFacultyUsers,
   getForms,
   getResponses,
@@ -102,21 +101,33 @@ const AdminDashboard = () => {
   const location = useLocation();
   const selectedSection = location.pathname.split("/")[2] || "dashboard";
 
-  const [forms, setForms] = useState(() => getForms());
-  const [responses, setResponses] = useState(() => getResponses());
-  const [facultyUsers, setFacultyUsers] = useState(() => getFacultyUsers());
-  const [analyticsByForm, setAnalyticsByForm] = useState(() => getAnalyticsByForm());
+  const [forms, setForms] = useState([]);
+  const [responses, setResponses] = useState([]);
+  const [facultyUsers, setFacultyUsers] = useState([]);
+  const [analyticsByForm, setAnalyticsByForm] = useState({});
   const [selectedFormId, setSelectedFormId] = useState("");
   const [newForm, setNewForm] = useState(createBlankForm());
   const [newFaculty, setNewFaculty] = useState(createBlankFaculty());
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  const syncAll = () => {
-    setForms(getForms());
-    setResponses(getResponses());
-    setFacultyUsers(getFacultyUsers());
-    setAnalyticsByForm(refreshAnalyticsData());
+  const syncAll = async () => {
+    const [formsData, responsesData, facultyData, analyticsData] = await Promise.all([
+      getForms(),
+      getResponses(),
+      getFacultyUsers(),
+      refreshAnalyticsData(),
+    ]);
+    setForms(formsData);
+    setResponses(responsesData);
+    setFacultyUsers(facultyData);
+    setAnalyticsByForm(analyticsData);
   };
+
+  useEffect(() => {
+    syncAll().catch(() => {
+      setMessage({ type: "error", text: "Failed to load dashboard data." });
+    });
+  }, []);
 
   const selectedAnalytics = selectedFormId ? analyticsByForm[selectedFormId] : null;
 
@@ -181,7 +192,7 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleCreateForm = () => {
+  const handleCreateForm = async () => {
     if (!newForm.course.trim()) {
       setMessage({ type: "error", text: "Course is required." });
       return;
@@ -198,31 +209,35 @@ const AdminDashboard = () => {
       return;
     }
 
-    createFeedbackForm({
-      ...newForm,
-      ratingScaleMax: 5,
-      subject: FORM_TEMPLATES[newForm.templateKey.replace("builtin:", "")]?.label || "Template 1",
-      title: `${newForm.course.trim()} Feedback`,
-      createdBy: user.email,
-      questions: newForm.questions.map((question) => ({
-        ...question,
-        question: question.question.trim(),
-        options: (question.options || []).filter(Boolean),
-      })),
-    });
+    try {
+      await createFeedbackForm({
+        ...newForm,
+        ratingScaleMax: 5,
+        subject: FORM_TEMPLATES[newForm.templateKey.replace("builtin:", "")]?.label || "Template 1",
+        title: `${newForm.course.trim()} Feedback`,
+        createdBy: user.email,
+        questions: newForm.questions.map((question) => ({
+          ...question,
+          question: question.question.trim(),
+          options: (question.options || []).filter(Boolean),
+        })),
+      });
 
-    setMessage({ type: "success", text: "Form created and assigned successfully." });
-    setNewForm(createBlankForm());
-    syncAll();
+      setMessage({ type: "success", text: "Form created and assigned successfully." });
+      setNewForm(createBlankForm());
+      await syncAll();
+    } catch {
+      setMessage({ type: "error", text: "Failed to create form." });
+    }
   };
 
-  const handleAddFaculty = () => {
+  const handleAddFaculty = async () => {
     if (!newFaculty.name.trim() || !newFaculty.email.trim() || !newFaculty.department.trim()) {
       setMessage({ type: "error", text: "Faculty name, email and department are required." });
       return;
     }
 
-    const result = addFacultyUser(newFaculty);
+    const result = await addFacultyUser(newFaculty);
     if (!result.ok) {
       setMessage({ type: "error", text: result.message });
       return;
@@ -230,7 +245,7 @@ const AdminDashboard = () => {
 
     setMessage({ type: "success", text: "Faculty account created." });
     setNewFaculty(createBlankFaculty());
-    syncAll();
+    await syncAll();
   };
 
   const renderContent = () => {
@@ -485,10 +500,14 @@ const AdminDashboard = () => {
                     <Button
                       color="error"
                       variant="outlined"
-                      onClick={() => {
-                        removeFacultyUser(faculty.email);
-                        setMessage({ type: "success", text: "Faculty removed." });
-                        syncAll();
+                      onClick={async () => {
+                        try {
+                          await removeFacultyUser(faculty.email);
+                          setMessage({ type: "success", text: "Faculty removed." });
+                          await syncAll();
+                        } catch {
+                          setMessage({ type: "error", text: "Failed to remove faculty." });
+                        }
                       }}
                     >
                       Remove Faculty

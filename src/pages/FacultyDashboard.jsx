@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -22,7 +22,6 @@ import DashboardHeader from "../components/DashboardHeader";
 import FormAnalyticsCharts from "../components/analytics/FormAnalyticsCharts";
 import { AuthContext } from "../context/AuthContextValue";
 import {
-  getAnalyticsByForm,
   getFacultyAssignedForms,
   getResponses,
   refreshAnalyticsData,
@@ -42,13 +41,36 @@ const FacultyDashboard = () => {
   const location = useLocation();
   const selectedSection = location.pathname.split("/")[2] || "dashboard";
 
-  const [assignedForms] = useState(() => getFacultyAssignedForms(user.email));
-  const [responses] = useState(() => getResponses());
-  const [analyticsByForm, setAnalyticsByForm] = useState(() => getAnalyticsByForm());
+  const [assignedForms, setAssignedForms] = useState([]);
+  const [responses, setResponses] = useState([]);
+  const [analyticsByForm, setAnalyticsByForm] = useState({});
   const [selectedFormId, setSelectedFormId] = useState("");
+  const [message, setMessage] = useState({ type: "", text: "" });
 
-  const refresh = () => {
-    setAnalyticsByForm(refreshAnalyticsData());
+  const loadData = async () => {
+    const [formsData, responsesData, analyticsData] = await Promise.all([
+      getFacultyAssignedForms(user.email),
+      getResponses(),
+      refreshAnalyticsData(),
+    ]);
+    setAssignedForms(formsData);
+    setResponses(responsesData);
+    setAnalyticsByForm(analyticsData);
+  };
+
+  useEffect(() => {
+    loadData().catch(() => {
+      setMessage({ type: "error", text: "Failed to load faculty data." });
+    });
+  }, [user.email]);
+
+  const refresh = async () => {
+    try {
+      await loadData();
+      setMessage({ type: "success", text: "Analytics refreshed." });
+    } catch {
+      setMessage({ type: "error", text: "Failed to refresh analytics." });
+    }
   };
 
   const formResponseCount = useMemo(
@@ -118,6 +140,12 @@ const FacultyDashboard = () => {
       </Drawer>
 
       <Box component="main" sx={{ flexGrow: 1, p: { xs: 3, md: 4 } }}>
+        {message.text && (
+          <Alert severity={message.type} sx={{ mb: 2 }}>
+            {message.text}
+          </Alert>
+        )}
+
         {selectedSection === "analytics" ? (
           <>
             <Card sx={{ borderRadius: 3, boxShadow: "var(--shadow-1)", mb: 3 }}>
