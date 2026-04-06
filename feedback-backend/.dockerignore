@@ -1,0 +1,12 @@
+target/
+.git/
+.gitignore
+README.md
+.DS_Store
+*.jar
+*.class
+*.log
+.vscode/
+.idea/
+node_modules/
+npm-debug.log

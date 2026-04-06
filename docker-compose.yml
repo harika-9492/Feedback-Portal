@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: feedback_postgres
+    environment:
+      POSTGRES_DB: feedback
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Harika@2836
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - feedback_network
+
+  backend:
+    build:
+      context: ./feedback-backend
+      dockerfile: Dockerfile
+    container_name: feedback_backend
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/feedback
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Harika@2836
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - feedback_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./feedback-portal
+      dockerfile: Dockerfile
+    container_name: feedback_portal
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8081
+    depends_on:
+      - backend
+    networks:
+      - feedback_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  feedback_network:
+    driver: bridge
