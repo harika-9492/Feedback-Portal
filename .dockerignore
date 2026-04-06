@@ -1,0 +1,13 @@
+# For Render deployment with monorepo structure
+# This Dockerfile builds the Spring Boot backend from the root level
+
+target/
+.git/
+.gitignore
+README.md
+.DS_Store
+*.log
+.vscode/
+.idea/
+node_modules/
+feedback-portal/
