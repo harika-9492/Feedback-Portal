@@ -52,7 +52,9 @@ const Login = () => {
         navigate("/student");
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Invalid credentials";
+      const errorMsg =
+        error.response?.data?.message ||
+        "Unable to reach server. Please try again.";
       setMessage({ type: "error", text: errorMsg });
     }
   };
