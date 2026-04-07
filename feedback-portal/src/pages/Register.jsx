@@ -9,8 +9,9 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getApiBaseUrl } from "../utils/apiBaseUrl";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://feedback-portal-production.up.railway.app/api";
+const API_BASE_URL = getApiBaseUrl();
 
 const Register = () => {
   const navigate = useNavigate();
@@ -102,7 +103,9 @@ const Register = () => {
         navigate("/login");
       }, 1200);
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "Registration failed. Please try again.";
+      const errorMsg =
+        error.response?.data?.message ||
+        "Unable to reach server. Please try again.";
       setMessage({
         type: "error",
         text: errorMsg,
